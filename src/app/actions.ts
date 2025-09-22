@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -46,13 +47,13 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
 
 export type VoteState = {
     error?: string;
-    songId?: number;
+    songId?: string;
 };
 
 export async function voteAction(prevState: VoteState | undefined, formData: FormData): Promise<VoteState> {
-  const songId = Number(formData.get('songId'));
-  if (isNaN(songId)) {
-    return { error: 'ID de chanson invalide', songId };
+  const songId = formData.get('songId') as string;
+  if (!songId) {
+    return { error: 'ID de chanson invalide' };
   }
   
   const headersList = headers();

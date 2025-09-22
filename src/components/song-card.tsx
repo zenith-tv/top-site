@@ -1,3 +1,4 @@
+
 'use client';
 
 import { voteAction, VoteState } from '@/app/actions';
@@ -13,7 +14,7 @@ import { ArrowIcon } from '@/components/ui/arrow-icon';
 
 
 interface SongCardProps {
-  song: Song;
+  song: Omit<Song, 'week'>;
   rank: number;
   initialState: VoteState | undefined;
 }

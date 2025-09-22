@@ -1,41 +1,27 @@
 import { unstable_noStore as noStore } from 'next/cache';
+import { db } from './firebase';
+import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
 
 export type Song = {
-  id: number;
+  id: string; // Firestore uses string IDs
   title: string;
   artist: string;
   votes: number;
+  week: string;
 };
 
-// In-memory store
-let songs: Song[] = [];
-
-let nextId = 1;
-let lastReset = getThisWeeksTuesday();
-const ipVotes = new Map<string, Set<number>>(); // IP -> Set of song IDs voted for
-
-function getThisWeeksTuesday(): Date {
+// This function determines the current "voting week".
+// We'll use this to partition songs by week in Firestore.
+// A week starts on Tuesday.
+function getThisWeeksTuesdayKey(): string {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dayOfWeek = today.getDay(); // Sunday - 0, ... Tuesday - 2, ... Saturday - 6
+    const dayOfWeek = today.getDay(); // Sunday - 0, ... Tuesday - 2, ...
     const daysSinceTuesday = (dayOfWeek - 2 + 7) % 7;
     const tuesday = new Date(today);
     tuesday.setDate(today.getDate() - daysSinceTuesday);
-    tuesday.setHours(0, 0, 0, 0);
-    return tuesday;
-}
-
-function resetDataIfNeeded() {
-  const now = new Date();
-  
-  const newTuesday = getThisWeeksTuesday();
-  if (newTuesday.getTime() > lastReset.getTime()) {
-      console.log("Resetting weekly data...");
-      songs = [];
-      nextId = 1;
-      ipVotes.clear();
-      lastReset = newTuesday;
-  }
+    // Return key in YYYY-MM-DD format
+    return tuesday.toISOString().split('T')[0];
 }
 
 function toTitleCase(str: string): string {
@@ -45,52 +31,95 @@ function toTitleCase(str: string): string {
     );
 }
 
-export async function getSongs() {
+export async function getSongs(): Promise<Omit<Song, 'week'>[]> {
   noStore();
-  resetDataIfNeeded();
-  return [...songs].sort((a, b) => b.votes - a.votes);
+  const weekKey = getThisWeeksTuesdayKey();
+  const songsCollection = collection(db, 'songs');
+  
+  // Query for songs of the current week and order by votes
+  const q = query(songsCollection, where('week', '==', weekKey), orderBy('votes', 'desc'));
+  
+  const querySnapshot = await getDocs(q);
+  const songs = querySnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  } as Song));
+
+  return songs;
 }
 
-export async function addSong(data: { title: string; artist: string }) {
+export async function addSong(data: { title: string; artist: string }): Promise<Song> {
   noStore();
-  resetDataIfNeeded();
-  
+  const weekKey = getThisWeeksTuesdayKey();
+  const songsCollection = collection(db, 'songs');
+
   const title = toTitleCase(data.title);
   const artist = toTitleCase(data.artist);
 
-  if (songs.some(s => s.title.toLowerCase() === title.toLowerCase() && s.artist.toLowerCase() === artist.toLowerCase())) {
+  // Check for duplicates in the current week
+  const q = query(songsCollection, 
+    where('week', '==', weekKey),
+    where('title_lowercase', '==', title.toLowerCase()),
+    where('artist_lowercase', '==', artist.toLowerCase())
+  );
+
+  const querySnapshot = await getDocs(q);
+  if (!querySnapshot.empty) {
       throw new Error("cette chanson est déjà dans le classement");
   }
 
-  const newSong: Song = {
-    id: nextId++,
+  const newSongData = {
     title: title,
     artist: artist,
-    votes: 0, 
+    title_lowercase: title.toLowerCase(),
+    artist_lowercase: artist.toLowerCase(),
+    votes: 0,
+    week: weekKey,
   };
-  songs.push(newSong);
-  return newSong;
+
+  const docRef = await addDoc(songsCollection, newSongData);
+
+  return {
+    id: docRef.id,
+    ...newSongData
+  };
 }
 
-export async function addVote(songId: number, ip: string) {
+
+export async function addVote(songId: string, ip: string): Promise<void> {
   noStore();
-  resetDataIfNeeded();
+  const weekKey = getThisWeeksTuesdayKey();
+  const votesCollection = collection(db, 'ip_votes');
+  
+  // Check if this IP has already voted for this song this week
+  const voteQuery = query(votesCollection, 
+    where('ip', '==', ip),
+    where('songId', '==', songId),
+    where('week', '==', weekKey)
+  );
 
-  if (!ipVotes.has(ip)) {
-    ipVotes.set(ip, new Set());
-  }
-
-  const userVotes = ipVotes.get(ip)!;
-
-  if (userVotes.has(songId)) {
+  const voteSnapshot = await getDocs(voteQuery);
+  if (!voteSnapshot.empty) {
     throw new Error("tu as déjà voté pour cette chanson!");
   }
 
-  const song = songs.find((s) => s.id === songId);
-  if (song) {
-    song.votes++;
-    userVotes.add(songId);
-    return song;
+  // Check if the song exists
+  const songRef = doc(db, 'songs', songId);
+  const songDoc = await getDoc(songRef);
+  if (!songDoc.exists() || songDoc.data().week !== weekKey) {
+      throw new Error("chanson non trouvée");
   }
-  throw new Error("chanson non trouvée");
+
+  // Record the vote
+  await addDoc(votesCollection, {
+    ip,
+    songId,
+    week: weekKey,
+    votedAt: new Date(),
+  });
+
+  // Increment the vote count on the song document
+  await updateDoc(songRef, {
+    votes: increment(1)
+  });
 }

@@ -1,3 +1,4 @@
+
 import type { Song } from '@/lib/data';
 import { SongCard } from './song-card';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -5,7 +6,7 @@ import { unstable_noStore as noStore } from 'next/cache';
 import { headers } from 'next/headers';
 
 interface SongChartProps {
-  songs: Song[];
+  songs: Omit<Song, 'week'>[];
 }
 
 export function SongChart({ songs }: SongChartProps) {
@@ -13,7 +14,7 @@ export function SongChart({ songs }: SongChartProps) {
   const headersList = headers();
   const initialState = {
     error: headersList.get('x-vote-error') || undefined,
-    songId: Number(headersList.get('x-vote-songid')) || undefined
+    songId: headersList.get('x-vote-songid') || undefined,
   };
 
   return (
