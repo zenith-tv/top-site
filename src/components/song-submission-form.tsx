@@ -1,6 +1,7 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useEffect, useRef } from 'react';
 import { submitSongAction, type FormState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ function SubmitButton() {
 }
 
 export function SongSubmissionForm() {
-  const [state, formAction] = useFormState(submitSongAction, initialState);
+  const [state, formAction] = useActionState(submitSongAction, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -47,7 +48,7 @@ export function SongSubmissionForm() {
       } else {
         // Other errors (like duplicate song)
         toast({
-          title: 'oups...',
+          title: 'oups!',
           description: state.message,
           variant: 'destructive',
         });

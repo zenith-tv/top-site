@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Song } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowIcon } from '@/components/ui/arrow-icon';
@@ -22,7 +23,7 @@ function VoteButton() {
     return (
         <Button size="sm" variant={pending ? "secondary" : "outline"} className="gap-2" aria-disabled={pending}>
             <ArrowIcon className="h-4 w-4" />
-            <span>{pending ? 'Vote en cours...' : 'Voter'}</span>
+            <span>{pending ? 'vote en cours' : 'voter'}</span>
         </Button>
     )
 }
@@ -30,12 +31,12 @@ function VoteButton() {
 export function SongCard({ song, rank, initialState }: SongCardProps) {
   const isTop10 = rank <= 10;
   const { toast } = useToast();
-  const [state, formAction] = useFormState(voteAction, initialState);
+  const [state, formAction] = useActionState(voteAction, initialState);
 
   useEffect(() => {
     if (state?.error && state.songId === song.id) {
         toast({
-            title: 'Erreur de vote',
+            title: 'erreur de vote',
             description: state.error,
             variant: 'destructive',
         });
