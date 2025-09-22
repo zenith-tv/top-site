@@ -39,16 +39,16 @@ export function SongSubmissionForm() {
     if (state.message) {
       if (state.errors && Object.keys(state.errors).length > 0) {
         // Validation errors are displayed inline
-      } else if (state.message.includes('succès')) {
+      } else if (state.message.includes('Succès')) {
         toast({
-          title: 'cool!',
+          title: 'Cool!',
           description: state.message,
         });
         formRef.current?.reset();
       } else {
         // Other errors (like duplicate song)
         toast({
-          title: 'oups!',
+          title: 'Oups!',
           description: state.message,
           variant: 'destructive',
         });
@@ -59,19 +59,19 @@ export function SongSubmissionForm() {
   return (
     <Card className="w-full sticky top-8 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold font-headline">propose un son</CardTitle>
-        <CardDescription className="text-base">ajoute ton titre préféré à la compétition</CardDescription>
+        <CardTitle className="text-3xl font-bold font-headline">Propose un son</CardTitle>
+        <CardDescription className="text-base">Ajoute ton titre préféré à la compétition</CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="artist" className="text-base">artiste</Label>
-            <Input id="artist" name="artist" placeholder="ex: daft punk" required className="text-lg md:text-base"/>
+            <Label htmlFor="artist" className="text-base">Artiste</Label>
+            <Input id="artist" name="artist" placeholder="Ex: Daft Punk" required className="text-lg md:text-base"/>
             {state.errors?.artist && <p className="text-sm font-medium text-destructive">{state.errors.artist[0]}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="title" className="text-base">titre</Label>
-            <Input id="title" name="title" placeholder="ex: one more time" required className="text-lg md:text-base"/>
+            <Input id="title" name="title" placeholder="Ex: One More Time" required className="text-lg md:text-base"/>
             {state.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
           </div>
           <SubmitButton />
