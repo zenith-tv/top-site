@@ -11,7 +11,7 @@ export default async function Home() {
       <header className="py-10">
         <div className="container mx-auto text-center px-4">
           <div className="flex items-center justify-center">
-            <Logo className="w-auto h-32 text-primary" />
+            <Logo className="w-auto h-40 text-primary" />
           </div>
           <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
             votez pour vos chansons préférées et faites-les monter dans le classement!
