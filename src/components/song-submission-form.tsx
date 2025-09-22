@@ -20,9 +20,9 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" aria-disabled={pending} className="w-full text-base">
-      {pending ? 'soumission...' : (
+      {pending ? 'Soumission...' : (
         <>
-          proposer le son
+          Proposer le son
           <ArrowIcon className="h-4 w-4" />
         </>
       )}
@@ -59,19 +59,19 @@ export function SongSubmissionForm() {
   return (
     <Card className="w-full sticky top-8 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-3xl font-bold font-headline">Propose un son</CardTitle>
-        <CardDescription className="text-base">Ajoute ton titre préféré à la compétition</CardDescription>
+        <CardTitle className="text-4xl font-bold font-headline">Propose un son</CardTitle>
+        <CardDescription className="text-2xl">Ajoute ton titre préféré à la compétition</CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="artist" className="text-base">Artiste</Label>
-            <Input id="artist" name="artist" placeholder="Ex: Daft Punk" required className="text-lg md:text-base"/>
+            <Label htmlFor="artist" className="text-2xl">Artiste</Label>
+            <Input id="artist" name="artist" placeholder="Ex: Daft Punk" required className="text-xl md:text-base"/>
             {state.errors?.artist && <p className="text-sm font-medium text-destructive">{state.errors.artist[0]}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-base">titre</Label>
-            <Input id="title" name="title" placeholder="Ex: One More Time" required className="text-lg md:text-base"/>
+            <Label htmlFor="title" className="text-2xl">titre</Label>
+            <Input id="title" name="title" placeholder="Ex: One More Time" required className="text-xl md:text-base"/>
             {state.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
           </div>
           <SubmitButton />

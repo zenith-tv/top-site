@@ -13,7 +13,7 @@ export default async function Home() {
           <div className="flex items-center justify-center">
             <Logo className="w-auto h-64 text-primary" />
           </div>
-          <p className="mt-4 max-w-2xl mx-auto text-xl text-muted-foreground">
+          <p className="mt-4 max-w-2xl mx-auto text-2xl text-muted-foreground">
             Votez pour vos chansons préférées et faites-les monter dans le classement!
           </p>
         </div>
