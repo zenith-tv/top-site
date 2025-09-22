@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addSong, addVote } from '@/lib/data';
+import { addSong, addVote, deleteSong } from '@/lib/data';
 import { headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
 
@@ -78,4 +78,19 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     }
     return { error: 'une erreur inconnue est survenue', songId };
   }
+}
+
+export async function deleteSongAction(formData: FormData) {
+    const songId = formData.get('songId') as string;
+    if (!songId) {
+        console.error('deleteSongAction: ID de chanson manquant');
+        return;
+    }
+    try {
+        await deleteSong(songId);
+        revalidatePath('/');
+    } catch (error) {
+        console.error('Erreur dans deleteSongAction:', error);
+        // On ne retourne pas d'erreur à l'utilisateur pour l'instant
+    }
 }

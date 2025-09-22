@@ -1,16 +1,28 @@
 
 'use client';
 
-import { voteAction, VoteState } from '@/app/actions';
+import { deleteSongAction, voteAction, VoteState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Song } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowIcon } from '@/components/ui/arrow-icon';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Trash } from 'lucide-react';
 
 
 interface SongCardProps {
@@ -55,25 +67,47 @@ export function SongCard({ song, rank, initialState }: SongCardProps) {
     >
       <div
         className={cn(
-          'flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-2xl sm:text-3xl font-bold transition-colors',
+          'flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-3xl font-bold transition-colors',
           isTop10 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
         )}
       >
         {rank}
       </div>
       <div className="flex-grow overflow-hidden">
-        <h3 className="font-bold text-xl sm:text-xl truncate font-headline">{song.title}</h3>
-        <p className="text-lg text-muted-foreground truncate">{song.artist}</p>
+        <h3 className="font-bold text-2xl sm:text-2xl truncate font-headline">{song.title}</h3>
+        <p className="text-xl text-muted-foreground truncate">{song.artist}</p>
       </div>
       <div className="flex-shrink-0 flex items-center gap-2 sm:gap-4">
         <div className="text-center">
-            <p className="font-bold text-xl sm:text-xl">{song.votes}</p>
+            <p className="font-bold text-2xl sm:text-2xl">{song.votes}</p>
             <p className="text-sm text-muted-foreground hidden sm:block">VOTES</p>
         </div>
         <form action={formAction}>
           <input type="hidden" name="songId" value={song.id} />
           <VoteButton />
         </form>
+        <AlertDialog>
+            <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                    <Trash className="h-5 w-5" />
+                </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Cette action est irréversible. La chanson "{song.title}" par {song.artist} sera supprimée définitivement.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <form action={deleteSongAction}>
+                        <input type="hidden" name="songId" value={song.id} />
+                        <AlertDialogAction type="submit">Supprimer</AlertDialogAction>
+                    </form>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Card>
   );

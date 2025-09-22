@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { db } from './firebase';
-import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, deleteDoc } from 'firebase/firestore';
 
 export type Song = {
   id: string; // Firestore uses string IDs
@@ -125,4 +125,10 @@ export async function addVote(songId: string, ip: string): Promise<void> {
         console.error("Erreur de transaction de vote:", error);
         throw new Error("erreur lors du traitement du vote");
     }
+}
+
+export async function deleteSong(songId: string): Promise<void> {
+    noStore();
+    const songRef = doc(db, 'songs', songId);
+    await deleteDoc(songRef);
 }
