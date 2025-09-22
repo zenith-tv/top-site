@@ -38,6 +38,13 @@ function resetDataIfNeeded() {
   }
 }
 
+function toTitleCase(str: string): string {
+    return str.replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
+    );
+}
+
 export async function getSongs() {
   noStore();
   resetDataIfNeeded();
@@ -48,14 +55,17 @@ export async function addSong(data: { title: string; artist: string }) {
   noStore();
   resetDataIfNeeded();
   
-  if (songs.some(s => s.title.toLowerCase() === data.title.toLowerCase() && s.artist.toLowerCase() === data.artist.toLowerCase())) {
-      throw new Error("Cette chanson est déjà dans le classement.");
+  const title = toTitleCase(data.title);
+  const artist = toTitleCase(data.artist);
+
+  if (songs.some(s => s.title.toLowerCase() === title.toLowerCase() && s.artist.toLowerCase() === artist.toLowerCase())) {
+      throw new Error("cette chanson est déjà dans le classement.");
   }
 
   const newSong: Song = {
     id: nextId++,
-    title: data.title,
-    artist: data.artist,
+    title: title,
+    artist: artist,
     votes: 1, 
   };
   songs.push(newSong);
@@ -73,7 +83,7 @@ export async function addVote(songId: number, ip: string) {
   const userVotes = ipVotes.get(ip)!;
 
   if (userVotes.has(songId)) {
-    throw new Error("Tu as déjà voté pour cette chanson!");
+    throw new Error("tu as déjà voté pour cette chanson!");
   }
 
   const song = songs.find((s) => s.id === songId);
@@ -82,5 +92,5 @@ export async function addVote(songId: number, ip: string) {
     userVotes.add(songId);
     return song;
   }
-  throw new Error("Chanson non trouvée.");
+  throw new Error("chanson non trouvée.");
 }
