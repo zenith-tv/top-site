@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { RippleEffect } from '@/components/ripple-effect';
 
 export const metadata: Metadata = {
   title: 'le top zén!th',
@@ -20,6 +21,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
+        <RippleEffect />
         {children}
         <Toaster />
       </body>
