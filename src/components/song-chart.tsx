@@ -9,12 +9,12 @@ interface SongChartProps {
   songs: Omit<Song, 'week'>[];
 }
 
-export function SongChart({ songs }: SongChartProps) {
+export async function SongChart({ songs }: SongChartProps) {
   noStore();
   const headersList = headers();
   const initialState = {
-    error: headersList.get('x-vote-error') || undefined,
-    songId: headersList.get('x-vote-songid') || undefined,
+    error: (await headersList).get('x-vote-error') || undefined,
+    songId: (await headersList).get('x-vote-songid') || undefined,
   };
 
   return (

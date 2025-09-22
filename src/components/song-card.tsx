@@ -37,7 +37,7 @@ export function SongCard({ song, rank, initialState }: SongCardProps) {
   useEffect(() => {
     if (state?.error && state.songId === song.id) {
         toast({
-            title: 'erreur de vote',
+            title: 'Erreur de vote',
             description: state.error,
             variant: 'destructive',
         });
@@ -62,12 +62,12 @@ export function SongCard({ song, rank, initialState }: SongCardProps) {
         {rank}
       </div>
       <div className="flex-grow overflow-hidden">
-        <h3 className="font-bold text-lg sm:text-xl truncate font-headline">{song.title}</h3>
-        <p className="text-base text-muted-foreground truncate">{song.artist}</p>
+        <h3 className="font-bold text-xl sm:text-xl truncate font-headline">{song.title}</h3>
+        <p className="text-lg text-muted-foreground truncate">{song.artist}</p>
       </div>
       <div className="flex-shrink-0 flex items-center gap-2 sm:gap-4">
         <div className="text-center">
-            <p className="font-bold text-lg sm:text-xl">{song.votes}</p>
+            <p className="font-bold text-xl sm:text-xl">{song.votes}</p>
             <p className="text-sm text-muted-foreground hidden sm:block">VOTES</p>
         </div>
         <form action={formAction}>
