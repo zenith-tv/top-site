@@ -10,7 +10,7 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 93% 51%;
+    --primary: 0 92.86% 40%;
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
@@ -18,11 +18,11 @@
     --muted-foreground: 0 0% 45.1%;
     --accent: 0 0% 3.9%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 93% 51%;
+    --destructive: 0 92.86% 40%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 0 93% 51%;
+    --ring: 0 92.86% 40%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -45,7 +45,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 93% 51%;
+    --primary: 0 92.86% 40%;
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
@@ -53,11 +53,11 @@
     --muted-foreground: 0 0% 63.9%;
     --accent: 0 0% 98%;
     --accent-foreground: 0 0% 3.9%;
-    --destructive: 0 93% 51%;
+    --destructive: 0 92.86% 40%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 0 93% 51%;
+    --ring: 0 92.86% 40%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -90,24 +90,24 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: radial-gradient(ellipse at 80% 20%, hsl(var(--primary) / 0.15) 0%, transparent 40%),
-                radial-gradient(ellipse at 20% 80%, hsl(240, 70%, 85% / 0.3) 0%, transparent 40%),
-                hsl(var(--background));
-    background-size: 200% 200%;
-    animation: gradient-move 15s ease-in-out infinite;
+    background: radial-gradient(ellipse at 80% 20%, hsl(var(--primary) / 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%);
     z-index: -1;
+    animation: gradient-move 10s linear infinite;
   }
+  
   .dark body::before {
-    background: radial-gradient(ellipse at 80% 20%, hsl(var(--primary)) 0%, transparent 40%),
-                radial-gradient(ellipse at 20% 80%, hsl(280, 70%, 40%) 0%, transparent 40%),
-                hsl(var(--background));
-    background-size: 200% 200%;
-    animation: gradient-move 20s ease-in-out infinite alternate;
+    background: radial-gradient(circle at 20% 20%, hsl(var(--primary) / 0.25) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, hsl(280, 40%, 30%) 0%, transparent 40%);
+    animation: gradient-move 20s linear infinite alternate;
   }
 }
 
 @keyframes gradient-move {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: -200% -200%;
+  }
 }
