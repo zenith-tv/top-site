@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowIcon } from '@/components/ui/arrow-icon';
 
 const initialState: FormState = {
   message: '',
@@ -18,7 +19,12 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" aria-disabled={pending} className="w-full">
-      {pending ? 'Soumission...' : 'Proposer la chanson'}
+      {pending ? 'Soumission...' : (
+        <>
+          Proposer le son
+          <ArrowIcon className="h-4 w-4" />
+        </>
+      )}
     </Button>
   );
 }
@@ -50,7 +56,7 @@ export function SongSubmissionForm() {
   }, [state, toast]);
 
   return (
-    <Card className="w-full sticky top-8">
+    <Card className="w-full sticky top-8 bg-card/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle>Propose un son</CardTitle>
         <CardDescription>Ajoute ton titre préféré à la compétition.</CardDescription>

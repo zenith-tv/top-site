@@ -1,6 +1,5 @@
 'use client';
 
-import { ThumbsUp } from 'lucide-react';
 import { voteAction, VoteState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { ArrowIcon } from '@/components/ui/arrow-icon';
 
 
 interface SongCardProps {
@@ -21,7 +21,7 @@ function VoteButton() {
     const { pending } = useFormStatus();
     return (
         <Button size="sm" variant={pending ? "secondary" : "outline"} className="gap-2" aria-disabled={pending}>
-            <ThumbsUp className="h-4 w-4" />
+            <ArrowIcon className="h-4 w-4" />
             <span>{pending ? 'Vote en cours...' : 'Voter'}</span>
         </Button>
     )
@@ -47,6 +47,7 @@ export function SongCard({ song, rank, initialState }: SongCardProps) {
     <Card
       className={cn(
         'p-3 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all duration-300',
+        'bg-card/50 backdrop-blur-sm',
         isTop10 && 'bg-primary/5 border-primary/20'
       )}
     >
