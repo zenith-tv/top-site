@@ -20,7 +20,7 @@ export function SongChart({ songs }: SongChartProps) {
   return (
     <Card className="bg-transparent border-0 shadow-none">
         <CardHeader>
-            <CardTitle className="text-3xl font-bold font-headline text-foreground">le classement</CardTitle>
+            <CardTitle className="text-4xl font-bold font-headline text-foreground">le classement</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
             {songs.length > 0 ? (
@@ -28,7 +28,7 @@ export function SongChart({ songs }: SongChartProps) {
                     <SongCard key={song.id} song={song} rank={index + 1} initialState={initialState}/>
                 ))
             ) : (
-                <div className="text-center py-12 text-muted-foreground bg-card/50 backdrop-blur-sm">
+                <div className="text-center py-12 text-lg text-muted-foreground bg-card/50 backdrop-blur-sm">
                     <p>aucune chanson dans le classement pour le moment</p>
                     <p>sois le premier à en proposer une!</p>
                 </div>

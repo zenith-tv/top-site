@@ -19,7 +19,7 @@ const initialState: FormState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" aria-disabled={pending} className="w-full">
+    <Button type="submit" aria-disabled={pending} className="w-full text-base">
       {pending ? 'soumission...' : (
         <>
           proposer le son
@@ -59,19 +59,19 @@ export function SongSubmissionForm() {
   return (
     <Card className="w-full sticky top-8 bg-card/50 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold font-headline">propose un son</CardTitle>
-        <CardDescription>ajoute ton titre préféré à la compétition</CardDescription>
+        <CardTitle className="text-3xl font-bold font-headline">propose un son</CardTitle>
+        <CardDescription className="text-base">ajoute ton titre préféré à la compétition</CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="artist">artiste</Label>
-            <Input id="artist" name="artist" placeholder="ex: daft punk" required />
+            <Label htmlFor="artist" className="text-base">artiste</Label>
+            <Input id="artist" name="artist" placeholder="ex: daft punk" required className="text-lg md:text-base"/>
             {state.errors?.artist && <p className="text-sm font-medium text-destructive">{state.errors.artist[0]}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="title">titre</Label>
-            <Input id="title" name="title" placeholder="ex: one more time" required />
+            <Label htmlFor="title" className="text-base">titre</Label>
+            <Input id="title" name="title" placeholder="ex: one more time" required className="text-lg md:text-base"/>
             {state.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
           </div>
           <SubmitButton />
