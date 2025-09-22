@@ -1,3 +1,30 @@
-export default function Home() {
-  return <></>;
+import { getSongs } from '@/lib/data';
+import { SongChart } from '@/components/song-chart';
+import { SongSubmissionForm } from '@/components/song-submission-form';
+
+export default async function Home() {
+  const songs = await getSongs();
+
+  return (
+    <>
+      <header className="py-10">
+        <div className="container mx-auto text-center px-4">
+          <h1 className="text-5xl font-extrabold tracking-tight font-headline text-primary">Le Top zén!th</h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+            Votez pour vos chansons préférées et faites-les monter dans le classement !
+          </p>
+        </div>
+      </header>
+      <main className="container mx-auto px-4 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            <div className="md:col-span-1">
+                <SongSubmissionForm />
+            </div>
+            <div className="md:col-span-2">
+                <SongChart songs={songs} />
+            </div>
+        </div>
+      </main>
+    </>
+  );
 }
