@@ -70,7 +70,7 @@ export function SongSubmissionForm() {
             {state.errors?.artist && <p className="text-sm font-medium text-destructive">{state.errors.artist[0]}</p>}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-2xl">titre</Label>
+            <Label htmlFor="title" className="text-2xl">Titre</Label>
             <Input id="title" name="title" placeholder="Ex: One More Time" required className="text-xl md:text-base"/>
             {state.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
           </div>
