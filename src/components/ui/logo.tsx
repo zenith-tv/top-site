@@ -49,3 +49,4 @@ export function Logo({ className, ...props }: React.SVGProps<SVGSVGElement>) {
 </svg>
   );
 }
+
