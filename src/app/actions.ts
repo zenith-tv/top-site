@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { addSong, addVote } from '@/lib/data';
 import { headers } from 'next/headers';
+import { FirebaseError } from 'firebase/app';
 
 
 const songSchema = z.object({
@@ -67,6 +68,11 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     return {};
   } catch (error) {
     console.error('Erreur dans voteAction:', error);
+    if (error instanceof FirebaseError) {
+        if (error.code === 'permission-denied') {
+            return { error: 'Erreur de permission. Vérifiez les règles de sécurité Firestore.', songId };
+        }
+    }
     if (error instanceof Error) {
         return { error: error.message, songId };
     }
