@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { db } from './firebase';
-import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction } from 'firebase/firestore';
 
 export type Song = {
   id: string; // Firestore uses string IDs
@@ -87,39 +87,42 @@ export async function addSong(data: { title: string; artist: string }): Promise<
 
 
 export async function addVote(songId: string, ip: string): Promise<void> {
-  noStore();
-  const weekKey = getThisWeeksTuesdayKey();
-  const votesCollection = collection(db, 'ip_votes');
-  
-  // Check if this IP has already voted for this song this week
-  const voteQuery = query(votesCollection, 
-    where('ip', '==', ip),
-    where('songId', '==', songId),
-    where('week', '==', weekKey)
-  );
+    noStore();
+    const weekKey = getThisWeeksTuesdayKey();
+    const voteId = `${weekKey}_${songId}_${ip.replace(/\./g, '-')}`;
+    const voteRef = doc(db, 'ip_votes', voteId);
+    const songRef = doc(db, 'songs', songId);
 
-  const voteSnapshot = await getDocs(voteQuery);
-  if (!voteSnapshot.empty) {
-    throw new Error("tu as déjà voté pour cette chanson!");
-  }
+    try {
+        await runTransaction(db, async (transaction) => {
+            const voteDoc = await transaction.get(voteRef);
+            if (voteDoc.exists()) {
+                throw new Error("tu as déjà voté pour cette chanson!");
+            }
 
-  // Check if the song exists
-  const songRef = doc(db, 'songs', songId);
-  const songDoc = await getDoc(songRef);
-  if (!songDoc.exists() || songDoc.data().week !== weekKey) {
-      throw new Error("chanson non trouvée");
-  }
+            const songDoc = await transaction.get(songRef);
+            if (!songDoc.exists() || songDoc.data().week !== weekKey) {
+                throw new Error("chanson non trouvée");
+            }
 
-  // Record the vote
-  await addDoc(votesCollection, {
-    ip,
-    songId,
-    week: weekKey,
-    votedAt: new Date(),
-  });
-
-  // Increment the vote count on the song document
-  await updateDoc(songRef, {
-    votes: increment(1)
-  });
+            transaction.set(voteRef, {
+                // We don't need to store songId, week, or IP as they are in the doc ID
+                votedAt: new Date(),
+            });
+            
+            transaction.update(songRef, {
+                votes: increment(1)
+            });
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            // Re-throw specific user-facing errors
+            if (error.message.includes("déjà voté") || error.message.includes("non trouvée")) {
+                throw error;
+            }
+        }
+        // Log the original error for debugging but throw a generic one to the user
+        console.error("Erreur de transaction de vote:", error);
+        throw new Error("erreur lors du traitement du vote");
+    }
 }
