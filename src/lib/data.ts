@@ -59,7 +59,7 @@ export async function addSong(data: { title: string; artist: string }) {
   const artist = toTitleCase(data.artist);
 
   if (songs.some(s => s.title.toLowerCase() === title.toLowerCase() && s.artist.toLowerCase() === artist.toLowerCase())) {
-      throw new Error("cette chanson est déjà dans le classement.");
+      throw new Error("cette chanson est déjà dans le classement");
   }
 
   const newSong: Song = {
@@ -92,5 +92,5 @@ export async function addVote(songId: number, ip: string) {
     userVotes.add(songId);
     return song;
   }
-  throw new Error("chanson non trouvée.");
+  throw new Error("chanson non trouvée");
 }

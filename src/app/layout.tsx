@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Le Top zén!th',
-  description: 'Votez pour vos chansons préférées et faites-les monter dans le classement!',
+  title: 'le top zén!th',
+  description: 'votez pour vos chansons préférées et faites-les monter dans le classement!',
 };
 
 export default function RootLayout({

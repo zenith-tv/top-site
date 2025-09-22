@@ -59,18 +59,18 @@ export function SongSubmissionForm() {
     <Card className="w-full sticky top-8 bg-card/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-2xl font-bold font-headline">propose un son</CardTitle>
-        <CardDescription>ajoute ton titre préféré à la compétition.</CardDescription>
+        <CardDescription>ajoute ton titre préféré à la compétition</CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="artist">artiste</Label>
-            <Input id="artist" name="artist" placeholder="ex: Daft Punk" required />
+            <Input id="artist" name="artist" placeholder="ex: daft punk" required />
             {state.errors?.artist && <p className="text-sm font-medium text-destructive">{state.errors.artist[0]}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="title">titre</Label>
-            <Input id="title" name="title" placeholder="ex: One More Time" required />
+            <Input id="title" name="title" placeholder="ex: one more time" required />
             {state.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
           </div>
           <SubmitButton />
