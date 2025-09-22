@@ -35,7 +35,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   try {
     await addSong(validatedFields.data);
     revalidatePath('/');
-    return { message: 'Chanson ajoutée avec succès !' };
+    return { message: 'Chanson ajoutée avec succès!' };
   } catch (error) {
     if (error instanceof Error) {
         return { message: error.message };

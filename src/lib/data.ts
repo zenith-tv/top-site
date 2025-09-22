@@ -73,7 +73,7 @@ export async function addVote(songId: number, ip: string) {
   const userVotes = ipVotes.get(ip)!;
 
   if (userVotes.has(songId)) {
-    throw new Error("Tu as déjà voté pour cette chanson !");
+    throw new Error("Tu as déjà voté pour cette chanson!");
   }
 
   const song = songs.find((s) => s.id === songId);

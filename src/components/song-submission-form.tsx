@@ -34,7 +34,7 @@ export function SongSubmissionForm() {
         // Validation errors are displayed inline
       } else if (state.message.includes('succès')) {
         toast({
-          title: 'Cool !',
+          title: 'Cool!',
           description: state.message,
         });
         formRef.current?.reset();

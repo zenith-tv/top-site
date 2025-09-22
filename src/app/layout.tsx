@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: 'Le Top zén!th',
-  description: 'Votez pour vos chansons préférées et faites-les monter dans le classement !',
+  description: 'Votez pour vos chansons préférées et faites-les monter dans le classement!',
 };
 
 export default function RootLayout({

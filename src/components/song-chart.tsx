@@ -29,7 +29,7 @@ export function SongChart({ songs }: SongChartProps) {
             ) : (
                 <div className="text-center py-12 text-muted-foreground">
                     <p>Aucune chanson dans le classement pour le moment.</p>
-                    <p>Sois le premier à en proposer une !</p>
+                    <p>Sois le premier à en proposer une!</p>
                 </div>
             )}
         </CardContent>
