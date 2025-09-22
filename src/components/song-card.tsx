@@ -1,16 +1,20 @@
 'use client';
 
 import { ThumbsUp } from 'lucide-react';
-import { voteAction } from '@/app/actions';
+import { voteAction, VoteState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Song } from '@/lib/data';
 import { cn } from '@/lib/utils';
-import { useFormStatus } from 'react-dom';
+import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface SongCardProps {
   song: Song;
   rank: number;
+  initialState: VoteState | undefined;
 }
 
 function VoteButton() {
@@ -23,19 +27,32 @@ function VoteButton() {
     )
 }
 
-export function SongCard({ song, rank }: SongCardProps) {
+export function SongCard({ song, rank, initialState }: SongCardProps) {
   const isTop10 = rank <= 10;
+  const { toast } = useToast();
+  const [state, formAction] = useFormState(voteAction, initialState);
+
+  useEffect(() => {
+    if (state?.error && state.songId === song.id) {
+        toast({
+            title: 'Erreur de vote',
+            description: state.error,
+            variant: 'destructive',
+        });
+    }
+  }, [state, song.id, toast]);
+
 
   return (
     <Card
       className={cn(
         'p-3 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all duration-300',
-        isTop10 && 'bg-primary/5 border-primary/20 shadow-md'
+        isTop10 && 'bg-primary/5 border-primary/20'
       )}
     >
       <div
         className={cn(
-          'flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center text-xl sm:text-2xl font-bold transition-colors',
+          'flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-xl sm:text-2xl font-bold transition-colors',
           isTop10 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
         )}
       >
@@ -50,7 +67,7 @@ export function SongCard({ song, rank }: SongCardProps) {
             <p className="font-bold text-base sm:text-lg">{song.votes}</p>
             <p className="text-xs text-muted-foreground hidden sm:block">VOTES</p>
         </div>
-        <form action={voteAction}>
+        <form action={formAction}>
           <input type="hidden" name="songId" value={song.id} />
           <VoteButton />
         </form>

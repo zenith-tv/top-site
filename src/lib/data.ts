@@ -8,23 +8,9 @@ export type Song = {
 };
 
 // In-memory store
-let songs: Song[] = [
-  { id: 1, artist: "Daft Punk", title: "One More Time", votes: 25 },
-  { id: 2, artist: "Queen", title: "Bohemian Rhapsody", votes: 42 },
-  { id: 3, artist: "Nirvana", title: "Smells Like Teen Spirit", votes: 35 },
-  { id: 4, artist: "Michael Jackson", title: "Billie Jean", votes: 38 },
-  { id: 5, artist: "The Beatles", title: "Hey Jude", votes: 31 },
-  { id: 6, artist: "Eagles", title: "Hotel California", votes: 29 },
-  { id: 7, artist: "Led Zeppelin", title: "Stairway to Heaven", votes: 33 },
-  { id: 8, artist: "AC/DC", title: "Back in Black", votes: 27 },
-  { id: 9, artist: "Guns N' Roses", title: "Sweet Child O' Mine", votes: 22 },
-  { id: 10, artist: "Bob Dylan", title: "Like a Rolling Stone", votes: 19 },
-  { id: 11, artist: "The Rolling Stones", title: "(I Can't Get No) Satisfaction", votes: 15 },
-  { id: 12, artist: "U2", title: "With or Without You", votes: 18 },
-  { id: 13, artist: "Radiohead", title: "Creep", votes: 21 },
-];
+let songs: Song[] = [];
 
-let nextId = songs.length + 1;
+let nextId = 1;
 let lastReset = getThisWeeksTuesday();
 const ipVotes = new Map<string, Set<number>>(); // IP -> Set of song IDs voted for
 
@@ -35,16 +21,13 @@ function getThisWeeksTuesday(): Date {
     const daysSinceTuesday = (dayOfWeek - 2 + 7) % 7;
     const tuesday = new Date(today);
     tuesday.setDate(today.getDate() - daysSinceTuesday);
+    tuesday.setHours(0, 0, 0, 0);
     return tuesday;
 }
 
 function resetDataIfNeeded() {
   const now = new Date();
-  if (now.getTime() < lastReset.getTime() + 7 * 24 * 60 * 60 * 1000) {
-      // Not yet time to reset
-      return;
-  }
-
+  
   const newTuesday = getThisWeeksTuesday();
   if (newTuesday.getTime() > lastReset.getTime()) {
       console.log("Resetting weekly data...");
@@ -90,10 +73,7 @@ export async function addVote(songId: number, ip: string) {
   const userVotes = ipVotes.get(ip)!;
 
   if (userVotes.has(songId)) {
-    console.warn(`IP ${ip} has already voted for song ${songId}.`);
-    // We don't throw an error to prevent the app from crashing, but we don't add a vote.
-    // The UI will just not update the vote count.
-    return;
+    throw new Error("Tu as déjà voté pour cette chanson !");
   }
 
   const song = songs.find((s) => s.id === songId);
@@ -102,5 +82,5 @@ export async function addVote(songId: number, ip: string) {
     userVotes.add(songId);
     return song;
   }
-  throw new Error("Song not found");
+  throw new Error("Chanson non trouvée.");
 }

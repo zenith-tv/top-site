@@ -18,7 +18,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" aria-disabled={pending} className="w-full">
-      {pending ? 'Soumission...' : 'Soumettre la chanson'}
+      {pending ? 'Soumission...' : 'Proposer la chanson'}
     </Button>
   );
 }
@@ -34,14 +34,14 @@ export function SongSubmissionForm() {
         // Validation errors are displayed inline
       } else if (state.message.includes('succès')) {
         toast({
-          title: 'Succès',
+          title: 'Cool !',
           description: state.message,
         });
         formRef.current?.reset();
       } else {
         // Other errors (like duplicate song)
         toast({
-          title: 'Erreur',
+          title: 'Oups...',
           description: state.message,
           variant: 'destructive',
         });
@@ -52,8 +52,8 @@ export function SongSubmissionForm() {
   return (
     <Card className="w-full sticky top-8">
       <CardHeader>
-        <CardTitle>Proposer une chanson</CardTitle>
-        <CardDescription>Ajoutez votre titre préféré à la compétition.</CardDescription>
+        <CardTitle>Propose un son</CardTitle>
+        <CardDescription>Ajoute ton titre préféré à la compétition.</CardDescription>
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">

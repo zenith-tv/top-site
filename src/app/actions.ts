@@ -44,10 +44,15 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   }
 }
 
-export async function voteAction(formData: FormData) {
+export type VoteState = {
+    error?: string;
+    songId?: number;
+};
+
+export async function voteAction(prevState: VoteState | undefined, formData: FormData): Promise<VoteState> {
   const songId = Number(formData.get('songId'));
   if (isNaN(songId)) {
-    throw new Error("ID de chanson invalide.");
+    return { error: 'ID de chanson invalide.', songId };
   }
   
   const headersList = headers();
@@ -57,14 +62,11 @@ export async function voteAction(formData: FormData) {
   try {
     await addVote(songId, ip);
     revalidatePath('/');
+    return {};
   } catch (error) {
-    console.error('Vote Error:', error);
-    // In a real app, you might want to return an error message to the user
-    // For now, we just log it. The UI won't update if there's an error.
     if (error instanceof Error) {
-        // We can't easily send this to the client without more complex state management
-        // For now, revalidating will show the current state, which is that the vote didn't go through.
-        revalidatePath('/');
+        return { error: error.message, songId };
     }
+    return { error: 'Une erreur inconnue est survenue.', songId };
   }
 }
