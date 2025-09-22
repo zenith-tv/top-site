@@ -38,6 +38,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
     revalidatePath('/');
     return { message: 'chanson ajoutée avec succès!' };
   } catch (error) {
+    console.error('Erreur dans submitSongAction:', error);
     if (error instanceof Error) {
         return { message: error.message };
     }
@@ -65,6 +66,7 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     revalidatePath('/');
     return {};
   } catch (error) {
+    console.error('Erreur dans voteAction:', error);
     if (error instanceof Error) {
         return { error: error.message, songId };
     }
