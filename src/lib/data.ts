@@ -66,7 +66,7 @@ export async function addSong(data: { title: string; artist: string }) {
     id: nextId++,
     title: title,
     artist: artist,
-    votes: 1, 
+    votes: 0, 
   };
   songs.push(newSong);
   return newSong;
