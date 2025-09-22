@@ -31,7 +31,7 @@ export function SongSubmissionForm() {
   useEffect(() => {
     if (state.message) {
       if (state.errors && Object.keys(state.errors).length > 0) {
-        // Error messages are displayed inline, no toast needed for validation
+        // Validation errors are displayed inline
       } else if (state.message.includes('succès')) {
         toast({
           title: 'Succès',
@@ -39,6 +39,7 @@ export function SongSubmissionForm() {
         });
         formRef.current?.reset();
       } else {
+        // Other errors (like duplicate song)
         toast({
           title: 'Erreur',
           description: state.message,
