@@ -103,7 +103,7 @@
   .ripple {
     position: absolute;
     border-radius: 50%;
-    background-color: hsl(var(--primary) / 0.1);
+    background-color: hsl(var(--primary) / 0.04);
     transform: scale(0);
     animation: ripple-effect 1s ease-out;
     pointer-events: none;
