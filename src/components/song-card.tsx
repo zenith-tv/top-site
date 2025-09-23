@@ -36,7 +36,7 @@ function VoteButton() {
     return (
         <Button size="sm" variant={pending ? "secondary" : "outline"} className="gap-2 text-base" aria-disabled={pending}>
             <ArrowIcon className="h-4 w-4" />
-            <span>{pending ? 'vote en cours' : 'voter'}</span>
+            <span>{pending ? 'Vote en cours' : 'Voter'}</span>
         </Button>
     )
 }
@@ -86,28 +86,6 @@ export function SongCard({ song, rank, initialState }: SongCardProps) {
           <input type="hidden" name="songId" value={song.id} />
           <VoteButton />
         </form>
-        <AlertDialog>
-            <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                    <Trash className="h-5 w-5" />
-                </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Êtes-vous sûr?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Cette action est irréversible. La chanson "{song.title}" par {song.artist} sera supprimée définitivement.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                    <form action={deleteSongAction}>
-                        <input type="hidden" name="songId" value={song.id} />
-                        <AlertDialogAction type="submit">Supprimer</AlertDialogAction>
-                    </form>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
       </div>
     </Card>
   );
