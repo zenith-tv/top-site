@@ -11,17 +11,29 @@ export type Song = {
 };
 
 // This function determines the current "voting week".
-// We'll use this to partition songs by week in Firestore.
-// A week starts on Tuesday.
+// A new week starts on Tuesday at 18:00 (6 PM).
 function getThisWeeksTuesdayKey(): string {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dayOfWeek = today.getDay(); // Sunday - 0, ... Tuesday - 2, ...
-    const daysSinceTuesday = (dayOfWeek - 2 + 7) % 7;
-    const tuesday = new Date(today);
-    tuesday.setDate(today.getDate() - daysSinceTuesday);
+    const dayOfWeek = now.getDay(); // Sunday - 0, ..., Tuesday - 2, ...
+    const hour = now.getHours();
+
+    let daysSinceTuesday;
+
+    // If it's Tuesday (2) but before 18:00, we are still in the previous week.
+    // The "new" Tuesday hasn't started yet. So, it's considered 7 days since the *last* active Tuesday.
+    if (dayOfWeek === 2 && hour < 18) {
+        daysSinceTuesday = 7;
+    } else {
+        // Standard calculation for other days.
+        daysSinceTuesday = (dayOfWeek - 2 + 7) % 7;
+    }
+
+    const lastTuesdayDate = new Date(now);
+    lastTuesdayDate.setDate(now.getDate() - daysSinceTuesday);
+    lastTuesdayDate.setHours(0, 0, 0, 0); // Normalize to the beginning of the day.
+    
     // Return key in YYYY-MM-DD format
-    return tuesday.toISOString().split('T')[0];
+    return lastTuesdayDate.toISOString().split('T')[0];
 }
 
 function toTitleCase(str: string): string {
