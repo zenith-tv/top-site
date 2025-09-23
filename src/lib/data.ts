@@ -25,10 +25,14 @@ function getThisWeeksTuesdayKey(): string {
 }
 
 function toTitleCase(str: string): string {
-    return str.replace(
-      /\w\S*/g,
-      (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase()
-    );
+    return str.split(' ').map(word => {
+        // If the word contains dots (likely an acronym like D.A.N.C.E.), uppercase it.
+        if (word.includes('.')) {
+            return word.toUpperCase();
+        }
+        // Otherwise, apply standard title case.
+        return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
 }
 
 export async function getSongs(): Promise<Omit<Song, 'week'>[]> {
@@ -106,7 +110,6 @@ export async function addVote(songId: string, ip: string): Promise<void> {
             }
 
             transaction.set(voteRef, {
-                // We don't need to store songId, week, or IP as they are in the doc ID
                 votedAt: new Date(),
             });
             
@@ -115,6 +118,9 @@ export async function addVote(songId: string, ip: string): Promise<void> {
             });
         });
     } catch (error) {
+        if (error instanceof FirebaseError) {
+            throw error; // Re-throw Firebase-specific errors to be caught in the action
+        }
         if (error instanceof Error) {
             // Re-throw specific user-facing errors
             if (error.message.includes("déjà voté") || error.message.includes("non trouvée")) {
