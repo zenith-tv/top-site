@@ -6,7 +6,11 @@ export async function GET() {
   noStore();
   try {
     const songs = await getSongs();
-    return NextResponse.json(songs);
+    const songsWithRank = songs.map((song, index) => ({
+      ...song,
+      rank: index + 1,
+    }));
+    return NextResponse.json(songsWithRank);
   } catch (error) {
     console.error('API Error getting songs:', error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
