@@ -58,8 +58,9 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     return { error: 'ID de chanson invalide' };
   }
   
-  const headersList = headers();
-  const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+  const headersList = await headers();
+  const ipHeader = headersList.get('x-forwarded-for');
+  const ip = ipHeader?.split(',')[0].trim() || '127.0.0.1';
 
 
   try {
