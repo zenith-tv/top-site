@@ -66,7 +66,6 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
 
   // Honeypot check
   if (honeypot) {
-    // Silently fail for bots, but revalidate to clear the form state on the client
     revalidatePath('/');
     return {};
   }
@@ -76,9 +75,28 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   }
   
   const headersList = headers();
-  // Vercel populates this header. In local dev, it might be the client's direct IP.
   const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
 
+  // Anti-VPN Check
+  const apiKey = process.env.IPQUALITYSCORE_API_KEY;
+  if (apiKey) {
+    try {
+      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${apiKey}/${ip}`);
+      if (!response.ok) {
+        console.warn('Avertissement: La vérification anti-VPN a échoué. Le vote est autorisé.', response.statusText);
+      } else {
+        const data = await response.json();
+        if (data.vpn || data.proxy || data.tor) {
+          return { error: 'Les votes via VPN ou proxy ne sont pas autorisés.', songId };
+        }
+      }
+    } catch (e) {
+      console.error('Erreur lors de la vérification anti-VPN:', e);
+      // En cas d'échec de l'API, on autorise le vote pour ne pas bloquer les utilisateurs légitimes.
+    }
+  } else {
+    console.warn('Avertissement: Clé API IPQualityScore non configurée. La vérification anti-VPN est désactivée.');
+  }
 
   try {
     await addVote(songId, ip);
@@ -86,11 +104,6 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     return {};
   } catch (error) {
     console.error('Erreur dans voteAction:', error);
-    if (error instanceof FirebaseError) {
-        if (error.code === 'permission-denied') {
-            return { error: 'Erreur de permission. Vérifiez les règles de sécurité Firestore.', songId };
-        }
-    }
     if (error instanceof Error) {
         return { error: error.message, songId };
     }
@@ -109,6 +122,5 @@ export async function deleteSongAction(formData: FormData) {
         revalidatePath('/');
     } catch (error) {
         console.error('Erreur dans deleteSongAction:', error);
-        // On ne retourne pas d'erreur à l'utilisateur pour l'instant
     }
 }
