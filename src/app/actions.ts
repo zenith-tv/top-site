@@ -3,8 +3,8 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addSong, addVote, deleteSong } from '@/lib/data';
-import { headers } from 'next/headers';
+import { addSong, addVote, deleteSong, getThisWeeksTuesdayKey } from '@/lib/data';
+import { cookies, headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
 
 
@@ -58,6 +58,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
 export type VoteState = {
     error?: string;
     songId?: string;
+    success?: boolean;
 };
 
 export async function voteAction(prevState: VoteState | undefined, formData: FormData): Promise<VoteState> {
@@ -74,8 +75,19 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     return { error: 'ID de chanson invalide' };
   }
   
-  const headersList = headers();
-  const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+  const headersList = await headers();
+  const ipHeader = headersList.get('x-forwarded-for');
+  const ip = ipHeader?.split(',')[0].trim() || '127.0.0.1';
+
+  const weekKey = getThisWeeksTuesdayKey();
+  const cookieStore = cookies();
+  const voteCookieName = `votes_${weekKey}`;
+  const voteCookie = cookieStore.get(voteCookieName)?.value ?? '';
+  const votedSongs = new Set(voteCookie.split(',').filter(Boolean));
+
+  if (votedSongs.has(songId)) {
+    return { error: 'tu as déjà voté pour cette chanson!', songId };
+  }
 
   // Anti-VPN Check
   const apiKey = process.env.IPQUALITYSCORE_API_KEY;
@@ -100,8 +112,15 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
 
   try {
     await addVote(songId, ip);
+    votedSongs.add(songId);
+    cookieStore.set({
+      name: voteCookieName,
+      value: Array.from(votedSongs).join(','),
+      maxAge: 60 * 60 * 24 * 7, // 1 semaine
+      path: '/',
+    });
     revalidatePath('/');
-    return {};
+    return { success: true, songId };
   } catch (error) {
     console.error('Erreur dans voteAction:', error);
     if (error instanceof Error) {
