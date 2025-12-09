@@ -19,8 +19,16 @@ export type FormState = {
   errors?: {
     title?: string[];
     artist?: string[];
+    general?: string[];
   };
 };
+
+const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte'];
+
+function containsForbiddenWords(text: string): boolean {
+    const lowercasedText = text.toLowerCase();
+    return forbiddenWords.some(word => lowercasedText.includes(word));
+}
 
 export async function submitSongAction(prevState: FormState, formData: FormData): Promise<FormState> {
   const validatedFields = songSchema.safeParse({
@@ -35,15 +43,24 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
       message: 'erreur de validation',
     };
   }
+  
+  const { title, artist, honeypot } = validatedFields.data;
 
   // Honeypot check
-  if (validatedFields.data.honeypot) {
+  if (honeypot) {
     // Silently fail for bots
     return { message: 'chanson ajoutée avec succès!' };
   }
+
+  // Profanity check
+  if (containsForbiddenWords(title) || containsForbiddenWords(artist)) {
+      return {
+          message: 'le nom de l\'artiste ou le titre contient des termes inappropriés.',
+      };
+  }
   
   try {
-    await addSong(validatedFields.data);
+    await addSong({ title, artist });
     revalidatePath('/');
     return { message: 'chanson ajoutée avec succès!' };
   } catch (error) {
