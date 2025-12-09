@@ -26,8 +26,8 @@ export type FormState = {
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte'];
 
 function containsForbiddenWords(text: string): boolean {
-    // Remove spaces and convert to lowercase
-    const sanitizedText = text.replace(/\s/g, '').toLowerCase();
+    // Remove all non-alphabetic characters and convert to lowercase
+    const sanitizedText = text.replace(/[^a-zA-Z]/g, '').toLowerCase();
     return forbiddenWords.some(word => sanitizedText.includes(word));
 }
 
