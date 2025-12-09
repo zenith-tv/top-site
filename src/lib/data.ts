@@ -13,7 +13,7 @@ export type Song = {
 
 // This function determines the current "voting week".
 // A new week starts on Tuesday at 18:00 (6 PM).
-function getThisWeeksTuesdayKey(): string {
+export function getThisWeeksTuesdayKey(): string {
     const now = new Date();
     const dayOfWeek = now.getDay(); // Sunday - 0, ..., Tuesday - 2, ...
     const hour = now.getHours();
@@ -103,10 +103,10 @@ export async function addSong(data: { title: string; artist: string }): Promise<
 }
 
 
-export async function addVote(songId: string, ip: string): Promise<void> {
+export async function addVote(songId: string, voterFingerprint: string): Promise<void> {
     noStore();
     const weekKey = getThisWeeksTuesdayKey();
-    const voteId = `${weekKey}_${songId}_${ip.replace(/\./g, '-')}`;
+    const voteId = `${weekKey}_${songId}_${voterFingerprint}`;
     const voteRef = doc(db, 'ip_votes', voteId);
     const songRef = doc(db, 'songs', songId);
 

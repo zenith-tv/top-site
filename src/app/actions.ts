@@ -3,9 +3,10 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addSong, addVote, deleteSong } from '@/lib/data';
-import { headers } from 'next/headers';
+import { addSong, addVote, deleteSong, getThisWeeksTuesdayKey } from '@/lib/data';
+import { cookies, headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
+import { createHash } from 'crypto';
 
 
 const songSchema = z.object({
@@ -47,26 +48,77 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   }
 }
 
+const voteSchema = z.object({
+  songId: z.string().regex(/^[A-Za-z0-9_-]{10,}$/u, 'ID de chanson invalide'),
+});
+
+const voteIdPattern = /^[A-Za-z0-9_-]{10,}$/u;
+
+function getClientIp(headersList: Headers): string {
+  const forwarded = headersList.get('x-forwarded-for')?.split(',')[0]?.trim();
+  const realIp = headersList.get('x-real-ip')?.trim();
+  const candidate = forwarded || realIp;
+
+  if (candidate && /^[0-9a-fA-F:.,]+$/.test(candidate)) {
+    return candidate;
+  }
+
+  return 'unknown';
+}
+
+function buildVoterFingerprint(headersList: Headers): string {
+  const ip = getClientIp(headersList);
+  const userAgent = headersList.get('user-agent') ?? 'unknown';
+
+  return createHash('sha256').update(`${ip}|${userAgent}`).digest('hex');
+}
+
 export type VoteState = {
     error?: string;
     songId?: string;
+    success?: boolean;
 };
 
 export async function voteAction(prevState: VoteState | undefined, formData: FormData): Promise<VoteState> {
-  const songId = formData.get('songId') as string;
-  if (!songId) {
-    return { error: 'ID de chanson invalide' };
-  }
-  
-  const headersList = await headers();
-  const ipHeader = headersList.get('x-forwarded-for');
-  const ip = ipHeader?.split(',')[0].trim() || '127.0.0.1';
+  const validated = voteSchema.safeParse({ songId: formData.get('songId') });
 
+  if (!validated.success) {
+    return { error: validated.error.errors[0]?.message ?? 'ID de chanson invalide' };
+  }
+
+  const songId = validated.data.songId;
+  const headersList = headers();
+  const fingerprint = buildVoterFingerprint(headersList);
+
+  const weekKey = getThisWeeksTuesdayKey();
+  const cookieStore = cookies();
+  const voteCookieName = `votes_${weekKey}`;
+  const voteCookie = cookieStore.get(voteCookieName)?.value ?? '';
+  const votedSongs = new Set(
+    voteCookie
+      .split(',')
+      .filter(Boolean)
+      .filter((id) => voteIdPattern.test(id))
+  );
+
+  if (votedSongs.has(songId)) {
+    return { error: 'tu as déjà voté pour cette chanson!', songId };
+  }
 
   try {
-    await addVote(songId, ip);
+    await addVote(songId, fingerprint);
+    votedSongs.add(songId);
+    cookieStore.set({
+      name: voteCookieName,
+      value: Array.from(votedSongs).join(','),
+      maxAge: 60 * 60 * 24 * 7, // 1 semaine
+      path: '/',
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: true,
+    });
     revalidatePath('/');
-    return {};
+    return { success: true, songId };
   } catch (error) {
     console.error('Erreur dans voteAction:', error);
     if (error instanceof FirebaseError) {
