@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { db } from './firebase';
 import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, deleteDoc } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 
 export type Song = {
   id: string; // Firestore uses string IDs

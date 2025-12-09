@@ -59,6 +59,7 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   }
   
   const headersList = headers();
+  // Vercel populates this header. In local dev, it might be the client's direct IP.
   const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
 
 
