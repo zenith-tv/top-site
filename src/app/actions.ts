@@ -23,7 +23,7 @@ export type FormState = {
   };
 };
 
-const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte'];
+const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites'];
 
 function containsForbiddenWords(text: string): boolean {
     // Remove all non-alphabetic characters and convert to lowercase
