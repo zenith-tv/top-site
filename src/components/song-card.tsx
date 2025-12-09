@@ -26,11 +26,12 @@ function VoteButton({ disabled, hasVotedThisWeek }: { disabled: boolean, hasVote
   let buttonText = 'Voter';
   if (pending) {
     buttonText = 'Vote en cours';
-  } else if (disabled) {
-    buttonText = 'Déjà voté';
   } else if (hasVotedThisWeek) {
     buttonText = 'Tu as voté';
+  } else if (disabled) { // this case might not be reachable if hasVotedThisWeek is true everywhere
+    buttonText = 'Déjà voté';
   }
+
 
   return (
     <Button
@@ -50,7 +51,7 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
   const isTop10 = rank <= 10;
   const { toast } = useToast();
   const [state, formAction] = useActionState(voteAction, initialState);
-  const [hasVotedForThisSong, setHasVotedForThisSong] = useState<boolean>(alreadyVoted ?? false);
+  const [hasVotedForThisSong, setHasVotedForThisSong] = useState<boolean>(false);
   const [hasVotedThisWeek, setHasVotedThisWeek] = useState<boolean>(alreadyVoted ?? false);
 
 
@@ -95,7 +96,10 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
         {rank}
       </div>
       <div className="flex-grow overflow-hidden">
-        <h3 className="font-bold text-3xl sm:text-3xl truncate font-headline">{song.title}</h3>
+        <h3 className="font-bold text-3xl sm:text-3xl truncate font-headline">
+          {song.title}
+          {song.title === 'Вокализ 1976.' && <span className="ml-2">😏</span>}
+        </h3>
         <p className="text-2xl text-muted-foreground truncate">{song.artist}</p>
       </div>
       <div className="flex-shrink-0 flex items-center gap-2 sm:gap-4">
