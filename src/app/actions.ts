@@ -134,26 +134,29 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     return { error: 'Tu as déjà voté cette semaine!', songId };
   }
 
-  // Anti-VPN Check - DISABLED
-  // const apiKey = process.env.IPQUALITYSCORE_API_KEY;
-  // if (apiKey) {
-  //   try {
-  //     const response = await fetch(`https://ipqualityscore.com/api/json/ip/${apiKey}/${ip}`);
-  //     if (!response.ok) {
-  //       console.warn('Avertissement: La vérification anti-VPN a échoué. Le vote est autorisé.', response.statusText);
-  //     } else {
-  //       const data = await response.json();
-  //       if (data.vpn || data.proxy || data.tor) {
-  //         return { error: 'Les votes via VPN ou proxy ne sont pas autorisés.', songId };
-  //       }
-  //     }
-  //   } catch (e) {
-  //     console.error('Erreur lors de la vérification anti-VPN:', e);
-  //     // En cas d'échec de l'API, on autorise le vote pour ne pas bloquer les utilisateurs légitimes.
-  //   }
-  // } else {
-  //   console.warn('Avertissement: Clé API IPQualityScore non configurée. La vérification anti-VPN est désactivée.');
-  // }
+  // Anti-VPN Check
+  const apiKey = process.env.IPQUALITYSCORE_API_KEY;
+  if (apiKey) {
+    try {
+      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${apiKey}/${ip}`);
+      if (!response.ok) {
+        console.warn('Avertissement: La vérification anti-VPN a échoué. Le vote est autorisé.', response.statusText);
+      } else {
+        const data = await response.json();
+        if (data.vpn || data.proxy || data.tor) {
+          if (data.isp === 'HostPapa' && data.vpn) {
+             return { error: 'Les votes depuis les serveurs HostPapa via VPN ne sont pas autorisés.', songId };
+          }
+          return { error: 'Les votes via VPN ou proxy ne sont pas autorisés.', songId };
+        }
+      }
+    } catch (e) {
+      console.error('Erreur lors de la vérification anti-VPN:', e);
+      // En cas d'échec de l'API, on autorise le vote pour ne pas bloquer les utilisateurs légitimes.
+    }
+  } else {
+    console.warn('Avertissement: Clé API IPQualityScore non configurée. La vérification anti-VPN est désactivée.');
+  }
 
   try {
     await addVote(songId, ip);
