@@ -39,7 +39,7 @@ export function SongSubmissionForm() {
     if (state.message) {
       if (state.errors && Object.keys(state.errors).length > 0) {
         // Validation errors are displayed inline
-      } else if (state.message.includes('Succès')) {
+      } else if (state.message.includes('succès')) {
         toast({
           title: 'Cool!',
           description: state.message,
@@ -64,6 +64,10 @@ export function SongSubmissionForm() {
       </CardHeader>
       <CardContent>
         <form ref={formRef} action={formAction} className="space-y-4">
+          <div className="hidden" aria-hidden="true">
+              <label htmlFor="honeypot-submit">Ne pas remplir ce champ</label>
+              <input type="text" id="honeypot-submit" name="honeypot" tabIndex={-1} autoComplete="off" />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="artist" className="text-2xl">Artiste</Label>
             <Input id="artist" name="artist" placeholder="Ex: Daft Punk" required className="text-xl md:text-base"/>
