@@ -25,14 +25,27 @@ export type FormState = {
 
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
 
+const homoglyphMap: { [key: string]: string } = {
+    'ⅰ': 'i', 'Ⅰ': 'i',
+    'ο': 'o', 'Ο': 'o', 'о': 'o', 'О': 'o',
+    'а': 'a', 'А': 'a',
+    'е': 'e', 'Е': 'e',
+    // Ajoutez d'autres homoglyphes si nécessaire
+};
+
 function containsForbiddenWords(text: string): boolean {
-    // Normalize the string to decompose combined characters (like é -> e + ´)
-    // Then remove accents/diacritics and any non-alphabetic characters.
-    const sanitizedText = text
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Remove accents
-        .replace(/[^a-zA-Z]/g, '') // Remove all non-alphabetic characters
+    // 1. Remplacer les homoglyphes connus
+    let sanitizedText = text.split('').map(char => homoglyphMap[char] || char).join('');
+    
+    // 2. Normaliser pour décomposer les accents
+    sanitizedText = sanitizedText.normalize('NFD')
+        // 3. Supprimer les accents
+        .replace(/[\u0300-\u036f]/g, '')
+        // 4. Supprimer tout ce qui n'est pas une lettre latine standard
+        .replace(/[^a-zA-Z]/g, '')
+        // 5. Mettre en minuscule
         .toLowerCase();
+        
     return forbiddenWords.some(word => sanitizedText.includes(word));
 }
 
