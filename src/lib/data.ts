@@ -1,3 +1,4 @@
+
 import { unstable_noStore as noStore } from 'next/cache';
 import { db } from './firebase';
 import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, setDoc } from 'firebase/firestore';
@@ -134,6 +135,7 @@ export async function addVote(songId: string, ip: string): Promise<void> {
             }
 
             transaction.set(voteRef, {
+                ip: ip,
                 songId: songId,
                 votedAt: new Date(),
             });
