@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addSong, addVote, getThisWeeksTuesdayKey } from '@/lib/data';
+import { addSong, addVote, getThisWeeksTuesdayKey, recordProfanityAttempt, getProfanityAttempts } from '@/lib/data';
 import { cookies, headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
 
@@ -23,7 +23,7 @@ export type FormState = {
   };
 };
 
-const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites'];
+const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
 
 function containsForbiddenWords(text: string): boolean {
     // Remove all non-alphabetic characters and convert to lowercase
@@ -32,6 +32,16 @@ function containsForbiddenWords(text: string): boolean {
 }
 
 export async function submitSongAction(prevState: FormState, formData: FormData): Promise<FormState> {
+  const headersList = await headers();
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+
+  const profanityAttempts = await getProfanityAttempts(ip);
+  if (profanityAttempts >= 3) {
+    return {
+      message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
+    };
+  }
+  
   const validatedFields = songSchema.safeParse({
     title: formData.get('title'),
     artist: formData.get('artist'),
@@ -55,6 +65,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
 
   // Profanity check
   if (containsForbiddenWords(title) || containsForbiddenWords(artist)) {
+      await recordProfanityAttempt(ip);
       return {
           message: 'le nom de l\'artiste ou le titre contient des termes inappropriés.',
       };
@@ -94,17 +105,15 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   }
   
   const headersList = await headers();
-  const ipHeader = headersList.get('x-forwarded-for');
-  const ip = ipHeader?.split(',')[0].trim() || '127.0.0.1';
+  const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
 
   const weekKey = getThisWeeksTuesdayKey();
   const cookieStore = cookies();
-  const voteCookieName = `votes_${weekKey}`;
-  const voteCookie = cookieStore.get(voteCookieName)?.value ?? '';
-  const votedSongs = new Set(voteCookie.split(',').filter(Boolean));
+  const voteCookieName = `vote_cast_${weekKey}`;
+  const hasVotedCookie = cookieStore.get(voteCookieName)?.value === 'true';
 
-  if (votedSongs.has(songId)) {
-    return { error: 'tu as déjà voté pour cette chanson!', songId };
+  if (hasVotedCookie) {
+    return { error: 'Tu as déjà voté cette semaine!', songId };
   }
 
   // Anti-VPN Check - DISABLED
@@ -130,10 +139,10 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
 
   try {
     await addVote(songId, ip);
-    votedSongs.add(songId);
+    
     cookieStore.set({
       name: voteCookieName,
-      value: Array.from(votedSongs).join(','),
+      value: 'true',
       maxAge: 60 * 60 * 24 * 7, // 1 semaine
       path: '/',
     });
@@ -142,6 +151,16 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   } catch (error) {
     console.error('Erreur dans voteAction:', error);
     if (error instanceof Error) {
+        if (error.message.includes("déjà voté")) {
+            // If the IP has already voted (detected by Firestore), set the cookie too.
+            cookieStore.set({
+                name: voteCookieName,
+                value: 'true',
+                maxAge: 60 * 60 * 24 * 7, // 1 semaine
+                path: '/',
+            });
+            revalidatePath('/');
+        }
         return { error: error.message, songId };
     }
     return { error: 'une erreur inconnue est survenue', songId };

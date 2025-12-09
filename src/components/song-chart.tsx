@@ -15,9 +15,9 @@ export async function SongChart({ songs }: SongChartProps) {
   const headersList = headers();
   const cookieStore = cookies();
   const weekKey = getThisWeeksTuesdayKey();
-  const voteCookieName = `votes_${weekKey}`;
-  const voteCookie = cookieStore.get(voteCookieName)?.value ?? '';
-  const votedSongs = new Set(voteCookie.split(',').filter(Boolean));
+  const voteCookieName = `vote_cast_${weekKey}`;
+  const hasVoted = cookieStore.get(voteCookieName)?.value === 'true';
+
   const initialState = {
     error: (await headersList).get('x-vote-error') || undefined,
     songId: (await headersList).get('x-vote-songid') || undefined,
@@ -36,7 +36,7 @@ export async function SongChart({ songs }: SongChartProps) {
                       song={song}
                       rank={index + 1}
                       initialState={initialState}
-                      hasVoted={votedSongs?.has(song.id)}
+                      hasVoted={hasVoted}
                     />
                 ))
             ) : (

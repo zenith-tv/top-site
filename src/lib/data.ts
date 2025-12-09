@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { db } from './firebase';
-import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, setDoc } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 
 export type Song = {
@@ -56,13 +56,17 @@ export async function getSongs(): Promise<Omit<Song, 'week'>[]> {
   // Query for songs of the current week and order by votes
   const q = query(songsCollection, where('week', '==', weekKey), orderBy('votes', 'desc'));
   
-  const querySnapshot = await getDocs(q);
-  const songs = querySnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  } as Song));
-
-  return songs;
+  try {
+    const querySnapshot = await getDocs(q);
+    const songs = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Song));
+    return songs;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des chansons: ", error);
+    return []; // Return empty array on error
+  }
 }
 
 export async function addSong(data: { title: string; artist: string }): Promise<Song> {
@@ -93,20 +97,27 @@ export async function addSong(data: { title: string; artist: string }): Promise<
     votes: 0,
     week: weekKey,
   };
-
-  const docRef = await addDoc(songsCollection, newSongData);
-
-  return {
-    id: docRef.id,
-    ...newSongData
-  };
+  
+  try {
+    const docRef = await addDoc(songsCollection, newSongData);
+    return {
+      id: docRef.id,
+      ...newSongData
+    };
+  } catch (error) {
+      console.error("Erreur dans addSong:", error);
+      if (error instanceof FirebaseError) {
+          throw new Error(`Erreur Firebase: ${error.message}`);
+      }
+      throw new Error("Impossible d'ajouter la chanson. Erreur de base de données.");
+  }
 }
 
 
 export async function addVote(songId: string, ip: string): Promise<void> {
     noStore();
     const weekKey = getThisWeeksTuesdayKey();
-    const voteId = `${weekKey}_${songId}_${ip.replace(/\./g, '-')}`;
+    const voteId = `${weekKey}_${ip.replace(/\./g, '-')}`;
     const voteRef = doc(db, 'ip_votes', voteId);
     const songRef = doc(db, 'songs', songId);
 
@@ -114,7 +125,7 @@ export async function addVote(songId: string, ip: string): Promise<void> {
         await runTransaction(db, async (transaction) => {
             const voteDoc = await transaction.get(voteRef);
             if (voteDoc.exists()) {
-                throw new Error("tu as déjà voté pour cette chanson!");
+                throw new Error("Tu as déjà voté cette semaine!");
             }
 
             const songDoc = await transaction.get(songRef);
@@ -123,6 +134,7 @@ export async function addVote(songId: string, ip: string): Promise<void> {
             }
 
             transaction.set(voteRef, {
+                songId: songId,
                 votedAt: new Date(),
             });
             
@@ -143,5 +155,47 @@ export async function addVote(songId: string, ip: string): Promise<void> {
         // Log the original error for debugging but throw a generic one to the user
         console.error("Erreur de transaction de vote:", error);
         throw new Error("erreur lors du traitement du vote");
+    }
+}
+
+export async function recordProfanityAttempt(ip: string): Promise<void> {
+  noStore();
+  const weekKey = getThisWeeksTuesdayKey();
+  const profanityDocId = `${weekKey}_${ip.replace(/\./g, '-')}`;
+  const profanityRef = doc(db, 'profanity_attempts', profanityDocId);
+  
+  try {
+    const docSnap = await getDoc(profanityRef);
+    if (docSnap.exists()) {
+        await updateDoc(profanityRef, {
+            count: increment(1),
+            lastAttemptAt: new Date(),
+        });
+    } else {
+        await setDoc(profanityRef, {
+            count: 1,
+            lastAttemptAt: new Date(),
+        });
+    }
+  } catch (error) {
+      console.error("Erreur lors de l'enregistrement de la tentative de grossièreté:", error);
+  }
+}
+
+export async function getProfanityAttempts(ip: string): Promise<number> {
+    noStore();
+    const weekKey = getThisWeeksTuesdayKey();
+    const profanityDocId = `${weekKey}_${ip.replace(/\./g, '-')}`;
+    const profanityRef = doc(db, 'profanity_attempts', profanityDocId);
+
+    try {
+        const docSnap = await getDoc(profanityRef);
+        if (docSnap.exists()) {
+            return docSnap.data().count || 0;
+        }
+        return 0;
+    } catch (error) {
+        console.error("Erreur lors de la récupération des tentatives de grossièreté:", error);
+        return 0; // Failsafe
     }
 }

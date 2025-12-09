@@ -19,9 +19,19 @@ interface SongCardProps {
   hasVoted?: boolean;
 }
 
-function VoteButton({ disabled }: { disabled: boolean }) {
+function VoteButton({ disabled, hasVotedThisWeek }: { disabled: boolean, hasVotedThisWeek: boolean }) {
   const { pending } = useFormStatus();
-  const isDisabled = pending || disabled;
+  const isDisabled = pending || disabled || hasVotedThisWeek;
+  
+  let buttonText = 'Voter';
+  if (pending) {
+    buttonText = 'Vote en cours';
+  } else if (disabled) {
+    buttonText = 'Déjà voté';
+  } else if (hasVotedThisWeek) {
+    buttonText = 'Tu as voté';
+  }
+
   return (
     <Button
       size="sm"
@@ -31,7 +41,7 @@ function VoteButton({ disabled }: { disabled: boolean }) {
       disabled={isDisabled}
     >
       <ArrowIcon className="h-4 w-4" />
-      <span>{pending ? 'Vote en cours' : disabled ? 'Déjà voté' : 'Voter'}</span>
+      <span>{buttonText}</span>
     </Button>
   )
 }
@@ -40,21 +50,33 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
   const isTop10 = rank <= 10;
   const { toast } = useToast();
   const [state, formAction] = useActionState(voteAction, initialState);
-  const [hasVoted, setHasVoted] = useState<boolean>(alreadyVoted ?? false);
+  const [hasVotedForThisSong, setHasVotedForThisSong] = useState<boolean>(alreadyVoted ?? false);
+  const [hasVotedThisWeek, setHasVotedThisWeek] = useState<boolean>(alreadyVoted ?? false);
+
 
   useEffect(() => {
-    if (state?.error && state.songId === song.id) {
+    if (state?.error) {
       toast({
         title: 'Erreur de vote',
         description: state.error,
         variant: 'destructive',
       });
+      if (state.error.includes('déjà voté')) {
+        setHasVotedThisWeek(true);
+      }
     }
     if (state?.success && state.songId === song.id) {
-      setHasVoted(true);
+      setHasVotedForThisSong(true);
+      setHasVotedThisWeek(true);
     }
   }, [state, song.id, toast]);
 
+  // If the cookie indicates a vote has been cast this week, update the state
+  useEffect(() => {
+    if (alreadyVoted) {
+      setHasVotedThisWeek(true);
+    }
+  }, [alreadyVoted]);
 
   return (
     <Card
@@ -87,7 +109,7 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
               <input type="text" id={`honeypot-vote-${song.id}`} name="honeypot" tabIndex={-1} autoComplete="off" />
             </div>
             <input type="hidden" name="songId" value={song.id} />
-            <VoteButton disabled={hasVoted} />
+            <VoteButton disabled={hasVotedForThisSong} hasVotedThisWeek={hasVotedThisWeek} />
         </form>
       </div>
     </Card>
