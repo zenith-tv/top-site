@@ -26,8 +26,13 @@ export type FormState = {
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
 
 function containsForbiddenWords(text: string): boolean {
-    // Remove all non-alphabetic characters and convert to lowercase
-    const sanitizedText = text.replace(/[^a-zA-Z]/g, '').toLowerCase();
+    // Normalize the string to decompose combined characters (like é -> e + ´)
+    // Then remove accents/diacritics and any non-alphabetic characters.
+    const sanitizedText = text
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/[^a-zA-Z]/g, '') // Remove all non-alphabetic characters
+        .toLowerCase();
     return forbiddenWords.some(word => sanitizedText.includes(word));
 }
 
