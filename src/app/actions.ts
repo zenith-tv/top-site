@@ -125,6 +125,27 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
 
+  // Anti-VPN Check
+  const apiKey = process.env.IP_QUALITY_SCORE_API_KEY;
+  if (apiKey) {
+      try {
+          const ipCheckResponse = await fetch(
+              `https://ipqualityscore.com/api/json/ip/${apiKey}/${ip}`
+          );
+          if (!ipCheckResponse.ok) {
+              console.error("Erreur de l'API IPQualityScore:", ipCheckResponse.statusText);
+          } else {
+              const ipData = await ipCheckResponse.json();
+              if (ipData.success && (ipData.vpn || ipData.proxy)) {
+                  return { error: 'Les votes par VPN ou proxy ne sont pas autorisés.', songId };
+              }
+          }
+      } catch (error) {
+          console.error("Impossible de vérifier l'adresse IP:", error);
+      }
+  }
+
+
   const weekKey = getThisWeeksTuesdayKey();
   const cookieStore = cookies();
   const voteCookieName = `vote_cast_${weekKey}`;
