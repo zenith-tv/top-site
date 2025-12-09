@@ -145,9 +145,3 @@ export async function addVote(songId: string, ip: string): Promise<void> {
         throw new Error("erreur lors du traitement du vote");
     }
 }
-
-export async function deleteSong(songId: string): Promise<void> {
-    noStore();
-    const songRef = doc(db, 'songs', songId);
-    await deleteDoc(songRef);
-}

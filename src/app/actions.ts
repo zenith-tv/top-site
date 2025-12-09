@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addSong, addVote, deleteSong, getThisWeeksTuesdayKey } from '@/lib/data';
+import { addSong, addVote, getThisWeeksTuesdayKey } from '@/lib/data';
 import { cookies, headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
 
@@ -26,8 +26,9 @@ export type FormState = {
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte'];
 
 function containsForbiddenWords(text: string): boolean {
-    const lowercasedText = text.toLowerCase();
-    return forbiddenWords.some(word => lowercasedText.includes(word));
+    // Remove spaces and convert to lowercase
+    const sanitizedText = text.replace(/\s/g, '').toLowerCase();
+    return forbiddenWords.some(word => sanitizedText.includes(word));
 }
 
 export async function submitSongAction(prevState: FormState, formData: FormData): Promise<FormState> {
@@ -106,26 +107,26 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     return { error: 'tu as déjà voté pour cette chanson!', songId };
   }
 
-  // Anti-VPN Check
-  const apiKey = process.env.IPQUALITYSCORE_API_KEY;
-  if (apiKey) {
-    try {
-      const response = await fetch(`https://ipqualityscore.com/api/json/ip/${apiKey}/${ip}`);
-      if (!response.ok) {
-        console.warn('Avertissement: La vérification anti-VPN a échoué. Le vote est autorisé.', response.statusText);
-      } else {
-        const data = await response.json();
-        if (data.vpn || data.proxy || data.tor) {
-          return { error: 'Les votes via VPN ou proxy ne sont pas autorisés.', songId };
-        }
-      }
-    } catch (e) {
-      console.error('Erreur lors de la vérification anti-VPN:', e);
-      // En cas d'échec de l'API, on autorise le vote pour ne pas bloquer les utilisateurs légitimes.
-    }
-  } else {
-    console.warn('Avertissement: Clé API IPQualityScore non configurée. La vérification anti-VPN est désactivée.');
-  }
+  // Anti-VPN Check - DISABLED
+  // const apiKey = process.env.IPQUALITYSCORE_API_KEY;
+  // if (apiKey) {
+  //   try {
+  //     const response = await fetch(`https://ipqualityscore.com/api/json/ip/${apiKey}/${ip}`);
+  //     if (!response.ok) {
+  //       console.warn('Avertissement: La vérification anti-VPN a échoué. Le vote est autorisé.', response.statusText);
+  //     } else {
+  //       const data = await response.json();
+  //       if (data.vpn || data.proxy || data.tor) {
+  //         return { error: 'Les votes via VPN ou proxy ne sont pas autorisés.', songId };
+  //       }
+  //     }
+  //   } catch (e) {
+  //     console.error('Erreur lors de la vérification anti-VPN:', e);
+  //     // En cas d'échec de l'API, on autorise le vote pour ne pas bloquer les utilisateurs légitimes.
+  //   }
+  // } else {
+  //   console.warn('Avertissement: Clé API IPQualityScore non configurée. La vérification anti-VPN est désactivée.');
+  // }
 
   try {
     await addVote(songId, ip);
@@ -145,18 +146,4 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     }
     return { error: 'une erreur inconnue est survenue', songId };
   }
-}
-
-export async function deleteSongAction(formData: FormData) {
-    const songId = formData.get('songId') as string;
-    if (!songId) {
-        console.error('deleteSongAction: ID de chanson manquant');
-        return;
-    }
-    try {
-        await deleteSong(songId);
-        revalidatePath('/');
-    } catch (error) {
-        console.error('Erreur dans deleteSongAction:', error);
-    }
 }

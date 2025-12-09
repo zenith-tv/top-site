@@ -1,7 +1,7 @@
 
 'use client';
 
-import { deleteSongAction, voteAction, VoteState } from '@/app/actions';
+import { voteAction, VoteState } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import type { Song } from '@/lib/data';
@@ -11,19 +11,6 @@ import { useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowIcon } from '@/components/ui/arrow-icon';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { Trash } from 'lucide-react';
-
 
 interface SongCardProps {
   song: Omit<Song, 'week'>;
@@ -102,28 +89,6 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
             <input type="hidden" name="songId" value={song.id} />
             <VoteButton disabled={hasVoted} />
         </form>
-         <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                <Trash className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cette chanson ?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Cette action est irréversible. La chanson "{song.title}" sera définitivement retirée du classement.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Annuler</AlertDialogCancel>
-              <form action={deleteSongAction}>
-                  <input type="hidden" name="songId" value={song.id} />
-                  <AlertDialogAction type="submit">Supprimer</AlertDialogAction>
-              </form>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </Card>
   );
