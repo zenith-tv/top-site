@@ -95,17 +95,12 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
             <p className="text-base text-muted-foreground hidden sm:block">VOTES</p>
         </div>
         <form action={formAction}>
-<<<<<<< HEAD
             <div className="hidden" aria-hidden="true">
               <label htmlFor={`honeypot-vote-${song.id}`}>Ne pas remplir ce champ</label>
               <input type="text" id={`honeypot-vote-${song.id}`} name="honeypot" tabIndex={-1} autoComplete="off" />
             </div>
             <input type="hidden" name="songId" value={song.id} />
-            <VoteButton />
-=======
-          <input type="hidden" name="songId" value={song.id} />
-          <VoteButton disabled={hasVoted} />
->>>>>>> bb3e3920b209f4796679cb0098894e5020d878d0
+            <VoteButton disabled={hasVoted} />
         </form>
          <AlertDialog>
           <AlertDialogTrigger asChild>
