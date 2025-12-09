@@ -67,25 +67,51 @@ export function SongCard({ song, rank, initialState }: SongCardProps) {
     >
       <div
         className={cn(
-          'flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-3xl font-bold transition-colors',
+          'flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center text-4xl font-bold transition-colors',
           isTop10 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
         )}
       >
         {rank}
       </div>
       <div className="flex-grow overflow-hidden">
-        <h3 className="font-bold text-2xl sm:text-2xl truncate font-headline">{song.title}</h3>
-        <p className="text-xl text-muted-foreground truncate">{song.artist}</p>
+        <h3 className="font-bold text-3xl sm:text-3xl truncate font-headline">{song.title}</h3>
+        <p className="text-2xl text-muted-foreground truncate">{song.artist}</p>
       </div>
       <div className="flex-shrink-0 flex items-center gap-2 sm:gap-4">
         <div className="text-center">
-            <p className="font-bold text-2xl sm:text-2xl">{song.votes}</p>
-            <p className="text-sm text-muted-foreground hidden sm:block">VOTES</p>
+            <p className="font-bold text-3xl sm:text-3xl">{song.votes}</p>
+            <p className="text-base text-muted-foreground hidden sm:block">VOTES</p>
         </div>
         <form action={formAction}>
-          <input type="hidden" name="songId" value={song.id} />
-          <VoteButton />
+            <div className="hidden" aria-hidden="true">
+              <label htmlFor={`honeypot-vote-${song.id}`}>Ne pas remplir ce champ</label>
+              <input type="text" id={`honeypot-vote-${song.id}`} name="honeypot" tabIndex={-1} autoComplete="off" />
+            </div>
+            <input type="hidden" name="songId" value={song.id} />
+            <VoteButton />
         </form>
+         <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                <Trash className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Êtes-vous sûr de vouloir supprimer cette chanson ?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. La chanson "{song.title}" sera définitivement retirée du classement.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <form action={deleteSongAction}>
+                  <input type="hidden" name="songId" value={song.id} />
+                  <AlertDialogAction type="submit">Supprimer</AlertDialogAction>
+              </form>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Card>
   );

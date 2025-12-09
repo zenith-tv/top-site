@@ -11,6 +11,7 @@ import { FirebaseError } from 'firebase/app';
 const songSchema = z.object({
   title: z.string().min(1, 'le titre est requis'),
   artist: z.string().min(1, 'l\'artiste est requis'),
+  honeypot: z.string().optional(),
 });
 
 export type FormState = {
@@ -25,6 +26,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   const validatedFields = songSchema.safeParse({
     title: formData.get('title'),
     artist: formData.get('artist'),
+    honeypot: formData.get('honeypot'),
   });
 
   if (!validatedFields.success) {
@@ -32,6 +34,12 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'erreur de validation',
     };
+  }
+
+  // Honeypot check
+  if (validatedFields.data.honeypot) {
+    // Silently fail for bots
+    return { message: 'chanson ajoutée avec succès!' };
   }
   
   try {
@@ -54,6 +62,15 @@ export type VoteState = {
 
 export async function voteAction(prevState: VoteState | undefined, formData: FormData): Promise<VoteState> {
   const songId = formData.get('songId') as string;
+  const honeypot = formData.get('honeypot') as string;
+
+  // Honeypot check
+  if (honeypot) {
+    // Silently fail for bots, but revalidate to clear the form state on the client
+    revalidatePath('/');
+    return {};
+  }
+
   if (!songId) {
     return { error: 'ID de chanson invalide' };
   }
