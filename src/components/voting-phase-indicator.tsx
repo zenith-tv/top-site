@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { cn } from '@/lib/utils';
 import { Clock, Star, Trophy } from 'lucide-react';
 
@@ -68,7 +68,7 @@ export function VotingPhaseIndicator() {
   
   return (
     <Card className={cn(
-        "w-full sticky top-8 bg-card/50 backdrop-blur-sm transition-all",
+        "w-full sticky top-8 bg-card/50 backdrop-blur-sm transition-all border",
         phaseColors[phaseInfo.phase]
         )}>
       <CardHeader>
@@ -76,7 +76,7 @@ export function VotingPhaseIndicator() {
             {phaseInfo.icon}
             <div className='flex-1'>
                 <CardTitle className="font-bold">{phaseInfo.message}</CardTitle>
-                <CardDescription>{phaseInfo.subMessage}</CardDescription>
+                <CardDescription className="text-base">{phaseInfo.subMessage}</CardDescription>
             </div>
         </div>
       </CardHeader>
