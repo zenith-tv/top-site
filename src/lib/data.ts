@@ -1,7 +1,7 @@
 
 import { unstable_noStore as noStore } from 'next/cache';
 import { db } from './firebase';
-import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, setDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, where, orderBy, doc, updateDoc, increment, getDoc, runTransaction, setDoc, limit } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 
 export type Song = {
@@ -209,5 +209,71 @@ export async function getProfanityAttempts(ip: string): Promise<number> {
     } catch (error) {
         console.error("Error getting profanity attempts:", error);
         return 0; // Failsafe
+    }
+}
+
+function getPreviousWeekKey(currentWeekKey: string): string {
+    const date = new Date(currentWeekKey);
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().split('T')[0];
+}
+
+export async function archivePreviousWeeksChart() {
+    noStore();
+    const now = new Date();
+    // This logic should only run on Tuesdays.
+    if (now.getDay() !== 2) {
+        return;
+    }
+
+    const currentWeekKey = getThisWeeksTuesdayKey();
+    const previousWeekKey = getPreviousWeekKey(currentWeekKey);
+
+    const archiveRef = doc(db, 'weekly_charts', previousWeekKey);
+    const archiveDoc = await getDoc(archiveRef);
+
+    // If the archive for the previous week already exists, do nothing.
+    if (archiveDoc.exists()) {
+        return;
+    }
+
+    // Get the top 10 songs from the previous week.
+    const songsCollection = collection(db, 'songs');
+    const q = query(
+        songsCollection,
+        where('week', '==', previousWeekKey),
+        orderBy('votes', 'desc'),
+        limit(10)
+    );
+
+    try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+            // If there were no songs, still create an archive entry to prevent re-running.
+            await setDoc(archiveRef, {
+                week: previousWeekKey,
+                chart: [],
+                archivedAt: new Date(),
+            });
+            return;
+        }
+
+        const topSongs = querySnapshot.docs.map((doc, index) => ({
+            rank: index + 1,
+            title: doc.data().title,
+            artist: doc.data().artist,
+            votes: doc.data().votes,
+        }));
+
+        // Save the top 10 songs to the archive.
+        await setDoc(archiveRef, {
+            week: previousWeekKey,
+            chart: topSongs,
+            archivedAt: new Date(),
+        });
+        console.log(`Archived top 10 for week: ${previousWeekKey}`);
+
+    } catch (error) {
+        console.error("Error archiving weekly chart: ", error);
     }
 }

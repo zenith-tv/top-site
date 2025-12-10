@@ -1,10 +1,17 @@
-import { getSongs, getThisWeeksTuesdayKey } from '@/lib/data';
+import { getSongs, getThisWeeksTuesdayKey, archivePreviousWeeksChart } from '@/lib/data';
 import { PageClient } from './page-client';
 import { cookies, headers } from 'next/headers';
 import { unstable_noStore as noStore } from 'next/cache';
 
 export default async function Home() {
   noStore();
+  
+  // On Tuesdays, check if we need to archive the previous week's chart.
+  const now = new Date();
+  if (now.getDay() === 2) { // Tuesday
+      await archivePreviousWeeksChart();
+  }
+
   const songs = await getSongs();
   
   const headersList = headers();
