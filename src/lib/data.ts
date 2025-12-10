@@ -38,13 +38,27 @@ export function getThisWeeksTuesdayKey(): string {
     return lastTuesdayDate.toISOString().split('T')[0];
 }
 
-function toTitleCase(str: string): string {
-    return str.split(' ').map(word => {
-        // If the word contains dots (likely an acronym like D.A.N.C.E.), uppercase it.
+function formatTitle(str: string): string {
+    if (!str) return "";
+    return str.split(' ').map((word, index) => {
+        // Handle acronyms like D.A.N.C.E.
         if (word.includes('.')) {
             return word.toUpperCase();
         }
-        // Otherwise, apply standard title case.
+        // Capitalize the first word, lowercase the rest
+        if (index === 0) {
+            return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
+        }
+        return word.toLowerCase();
+    }).join(' ');
+}
+
+function formatArtist(str: string): string {
+    if (!str) return "";
+    return str.split(' ').map(word => {
+        if (word.includes('.')) {
+            return word.toUpperCase();
+        }
         return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
     }).join(' ');
 }
@@ -75,8 +89,8 @@ export async function addSong(data: { title: string; artist: string }): Promise<
   const weekKey = getThisWeeksTuesdayKey();
   const songsCollection = collection(db, 'songs');
 
-  const title = toTitleCase(data.title);
-  const artist = toTitleCase(data.artist);
+  const title = formatTitle(data.title);
+  const artist = formatArtist(data.artist);
 
   // Check for duplicates in the current week (client-side check for immediate feedback)
   const q = query(songsCollection, 

@@ -113,8 +113,8 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
     <Card
       className={cn(
         'p-3 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all duration-300',
-        'bg-card/50 backdrop-blur-sm',
-        isTop10 && 'bg-primary/5 border-primary/20',
+        'bg-transparent border',
+        isTop10 && 'border-primary/20',
         (voteLockReason && !hasVotedThisWeek) && 'opacity-60'
       )}
     >
