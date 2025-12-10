@@ -40,16 +40,12 @@ export function getThisWeeksTuesdayKey(): string {
 
 function formatTitle(str: string): string {
     if (!str) return "";
-    return str.split(' ').map((word, index) => {
+    return str.split(' ').map(word => {
         // Handle acronyms like D.A.N.C.E.
         if (word.includes('.')) {
             return word.toUpperCase();
         }
-        // Capitalize the first word, lowercase the rest
-        if (index === 0) {
-            return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
-        }
-        return word.toLowerCase();
+        return word.charAt(0).toUpperCase() + word.substring(1).toLowerCase();
     }).join(' ');
 }
 
@@ -92,6 +88,19 @@ export async function addSong(data: { title: string; artist: string }): Promise<
   const title = formatTitle(data.title);
   const artist = formatArtist(data.artist);
 
+  const newSongDataForRules = {
+      title: title,
+      artist: artist,
+      votes: 0,
+      week: weekKey,
+  };
+
+  const newSongDataForDb = {
+      ...newSongDataForRules,
+      title_lowercase: title.toLowerCase(),
+      artist_lowercase: artist.toLowerCase(),
+  };
+
   // Check for duplicates in the current week (client-side check for immediate feedback)
   const q = query(songsCollection, 
     where('week', '==', weekKey),
@@ -103,24 +112,12 @@ export async function addSong(data: { title: string; artist: string }): Promise<
   if (!querySnapshot.empty) {
       throw new Error("cette chanson est déjà dans le classement");
   }
-
-  // Data sent to Firestore, respecting security rules
-  const newSongData = {
-    title: title,
-    artist: artist,
-    votes: 0,
-    week: weekKey,
-    // The lowercase fields will be created by Firestore rules or a backend function
-    // to ensure conformity with security rules that might not allow them from the client.
-    title_lowercase: title.toLowerCase(),
-    artist_lowercase: artist.toLowerCase(),
-  };
   
   try {
-    const docRef = await addDoc(songsCollection, newSongData);
+    const docRef = await addDoc(songsCollection, newSongDataForDb);
     return {
       id: docRef.id,
-      ...newSongData
+      ...newSongDataForDb
     };
   } catch (error) {
       console.error("Erreur dans addSong:", error);

@@ -25,7 +25,7 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     else if (day === 1 && hour >= 8) {
         return { 
             phase: 'TOP_3',
-            message: 'Sprint Final',
+            message: 'Sprint final',
             subMessage: 'Seul le podium peut être voté ! Qui sera le numéro 1 ?',
             icon: <Trophy className="h-6 w-6 text-amber-500" />
         };
@@ -34,7 +34,7 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     else if (day === 2 && hour < 18) {
         return { 
             phase: 'TOP_3',
-            message: 'Sprint Final',
+            message: 'Sprint final',
             subMessage: 'Le classement final est imminent ! Derniers votes pour le podium.',
             icon: <Trophy className="h-6 w-6 text-amber-500" />
         };
@@ -43,7 +43,7 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     // Default: Normal voting
     return { 
         phase: 'NORMAL',
-        message: 'Vote Normal',
+        message: 'Vote normal',
         subMessage: 'Toutes les chansons sont ouvertes aux votes. Faites votre choix !',
         icon: <Clock className="h-6 w-6 text-muted-foreground" />
     };
