@@ -11,6 +11,7 @@ import { useFormStatus } from 'react-dom';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowIcon } from '@/components/ui/arrow-icon';
+import { useLanguage } from '@/context/language-context';
 
 interface SongCardProps {
   song: Omit<Song, 'week'>;
@@ -21,18 +22,19 @@ interface SongCardProps {
 
 function VoteButton({ disabled, hasVotedThisWeek, voteLockReason }: { disabled: boolean, hasVotedThisWeek: boolean, voteLockReason: string | null }) {
   const { pending } = useFormStatus();
+  const { t } = useLanguage();
   const isLocked = voteLockReason !== null;
   const isDisabled = pending || disabled || hasVotedThisWeek || isLocked;
   
-  let buttonText = 'Voter';
+  let buttonText = t('vote_button');
   if (pending) {
-    buttonText = 'Vote en cours';
+    buttonText = t('vote_pending');
   } else if (isLocked) {
     buttonText = voteLockReason;
   } else if (hasVotedThisWeek) {
-    buttonText = 'Tu as voté';
+    buttonText = t('vote_voted_this_week');
   } else if (disabled) {
-    buttonText = 'Déjà voté';
+    buttonText = t('vote_already_voted');
   }
 
 
@@ -53,6 +55,7 @@ function VoteButton({ disabled, hasVotedThisWeek, voteLockReason }: { disabled: 
 export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: SongCardProps) {
   const isTop10 = rank <= 10;
   const isTop3 = rank <= 3;
+  const { t } = useLanguage();
   const { toast } = useToast();
   const [state, formAction] = useActionState(voteAction, initialState);
   const [hasVotedForThisSong, setHasVotedForThisSong] = useState<boolean>(false);
@@ -61,38 +64,38 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
 
   useEffect(() => {
     const now = new Date();
-    const day = now.getDay(); // 0=Dimanche, 1=Lundi, ..., 5=Vendredi
+    const day = now.getDay(); // 0=Sunday, 1=Monday, ..., 5=Friday
     const hour = now.getHours();
 
-    // Vendredi (jour 5): On ne peut voter que pour le top 10
+    // Friday (day 5): Can only vote for top 10
     if (day === 5) {
         if (!isTop10) {
-            setVoteLockReason("Top 10");
+            setVoteLockReason(t('phase_top_10_short'));
         }
     }
-    // Lundi (jour 1) à partir de 8h: On ne peut voter que pour le top 3
+    // Monday (day 1) from 8h onwards: Can only vote for top 3
     else if (day === 1 && hour >= 8) {
         if (!isTop3) {
-            setVoteLockReason("Top 3");
+            setVoteLockReason(t('phase_top_3_short'));
         }
     }
-    // Mardi (jour 2) avant 18h: on est toujours dans la phase "Sprint final" du lundi
+    // Tuesday (day 2) before 18h: Still in "Sprint Final" from Monday
     else if (day === 2 && hour < 18) {
         if(!isTop3) {
-            setVoteLockReason("Top 3");
+            setVoteLockReason(t('phase_top_3_short'));
         }
     }
-  }, [isTop10, isTop3]);
+  }, [isTop10, isTop3, t]);
 
 
   useEffect(() => {
     if (state?.error) {
       toast({
-        title: 'Erreur de vote',
+        title: t('toast_vote_error_title'),
         description: state.error,
         variant: 'destructive',
       });
-      if (state.error.includes('déjà voté')) {
+      if (state.error.includes('déjà voté') || state.error.includes('already voted')) {
         setHasVotedThisWeek(true);
       }
     }
@@ -100,7 +103,7 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
       setHasVotedForThisSong(true);
       setHasVotedThisWeek(true);
     }
-  }, [state, song.id, toast]);
+  }, [state, song.id, toast, t]);
 
   // If the cookie indicates a vote has been cast this week, update the state
   useEffect(() => {
@@ -136,11 +139,11 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
       <div className="flex-shrink-0 flex items-center gap-2 sm:gap-4">
         <div className="text-center">
             <p className="font-bold text-3xl sm:text-3xl">{song.votes}</p>
-            <p className="text-base text-muted-foreground hidden sm:block">VOTES</p>
+            <p className="text-base text-muted-foreground hidden sm:block">{t('votes_label')}</p>
         </div>
         <form action={formAction}>
             <div className="hidden" aria-hidden="true">
-              <label htmlFor={`honeypot-vote-${song.id}`}>Ne pas remplir ce champ</label>
+              <label htmlFor={`honeypot-vote-${song.id}`}>{t('honeypot_label')}</label>
               <input type="text" id={`honeypot-vote-${song.id}`} name="honeypot" tabIndex={-1} autoComplete="off" />
             </div>
             <input type="hidden" name="songId" value={song.id} />

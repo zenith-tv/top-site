@@ -10,8 +10,8 @@ import { moderateSong } from '@/ai/flows/song-moderation-flow';
 
 
 const songSchema = z.object({
-  title: z.string().min(1, 'le titre est requis'),
-  artist: z.string().min(1, 'l\'artiste est requis'),
+  title: z.string().min(1, 'Title is required / Le titre est requis'),
+  artist: z.string().min(1, 'Artist is required / L\'artiste est requis'),
   honeypot: z.string().optional(),
 });
 
@@ -83,8 +83,8 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   const profanityAttempts = await getProfanityAttempts(ip);
   if (profanityAttempts >= 3) {
     return {
-      message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
-      errors: { general: ['Tu as été bloqué pour soumissions inappropriées répétées.'] },
+      message: 'You have been blocked for repeated inappropriate submissions. / Tu as été bloqué pour soumissions inappropriées répétées.',
+      errors: { general: ['You have been blocked for repeated inappropriate submissions. / Tu as été bloqué pour soumissions inappropriées répétées.'] },
     };
   }
   
@@ -97,7 +97,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
-      message: 'erreur de validation',
+      message: 'Validation error / Erreur de validation',
     };
   }
   
@@ -106,7 +106,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   // Honeypot check
   if (honeypot) {
     // Silently fail for bots
-    return { message: 'chanson ajoutée avec succès!' };
+    return { message: 'Song added successfully! / Chanson ajoutée avec succès!' };
   }
 
   // Profanity check (Instant Ban words)
@@ -115,12 +115,12 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
       const newProfanityAttempts = await getProfanityAttempts(ip);
         if (newProfanityAttempts >= 3) {
             return {
-                message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
-                errors: { general: ['Tu as été bloqué pour soumissions inappropriées répétées.'] },
+                message: 'You have been blocked for repeated inappropriate submissions. / Tu as été bloqué pour soumissions inappropriées répétées.',
+                errors: { general: ['You have been blocked for repeated inappropriate submissions. / Tu as été bloqué pour soumissions inappropriées répétées.'] },
             };
         }
       return {
-          message: 'le nom de l\'artiste ou le titre contient des termes inappropriés.',
+          message: 'Artist or title name contains inappropriate terms. / Le nom de l\'artiste ou le titre contient des termes inappropriés.',
       };
   }
 
@@ -132,29 +132,32 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
         const newProfanityAttempts = await getProfanityAttempts(ip);
         if (newProfanityAttempts >= 3) {
             return {
-                message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
-                errors: { general: ['Tu as été bloqué pour soumissions inappropriées répétées.'] },
+                message: 'You have been blocked for repeated inappropriate submissions. / Tu as été bloqué pour soumissions inappropriées répétées.',
+                errors: { general: ['You have been blocked for repeated inappropriate submissions. / Tu as été bloqué pour soumissions inappropriées répétées.'] },
             };
         }
         return {
-            message: `Soumission rejetée : ${moderationResult.reason}`
+            message: `Submission rejected: ${moderationResult.reason} / Soumission rejetée : ${moderationResult.reason}`
         };
     }
   } catch (error) {
-    console.error("Erreur de modération IA:", error);
-    // En cas d'erreur de l'IA, on continue sans bloquer pour ne pas pénaliser les utilisateurs légitimes.
+    console.error("AI moderation error:", error);
+    // In case of AI error, proceed without blocking to avoid penalizing legitimate users.
   }
   
   try {
     await addSong({ title, artist });
     revalidatePath('/');
-    return { message: 'chanson ajoutée avec succès!' };
+    return { message: 'Song added successfully! / Chanson ajoutée avec succès!' };
   } catch (error) {
-    console.error('Erreur dans submitSongAction:', error);
+    console.error('Error in submitSongAction:', error);
     if (error instanceof Error) {
+        if (error.message.includes('This song is already in the chart') || error.message.includes('cette chanson est déjà dans le classement')) {
+            return { message: error.message };
+        }
         return { message: error.message };
     }
-    return { message: 'erreur serveur lors de l\'ajout de la chanson' };
+    return { message: 'Server error when adding the song / Erreur serveur lors de l\'ajout de la chanson' };
   }
 }
 
@@ -175,7 +178,7 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   }
 
   if (!songId) {
-    return { error: 'ID de chanson invalide' };
+    return { error: 'Invalid song ID / ID de chanson invalide' };
   }
   
   const headersList = await headers();
@@ -187,13 +190,13 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     if (ipCheckResponse.ok) {
       const ipData = await ipCheckResponse.json();
       if (ipData.proxy) {
-        return { error: 'Les votes par VPN ou proxy ne sont pas autorisés.', songId };
+        return { error: 'Votes via VPN or proxy are not allowed. / Les votes par VPN ou proxy ne sont pas autorisés.', songId };
       }
     } else {
-      console.error("Erreur de l'API ip-api.com:", ipCheckResponse.statusText);
+      console.error("ip-api.com API error:", ipCheckResponse.statusText);
     }
   } catch (error) {
-    console.error("Impossible de vérifier l'adresse IP:", error);
+    console.error("Could not verify IP address:", error);
   }
 
 
@@ -203,7 +206,7 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   const hasVotedCookie = cookieStore.get(voteCookieName)?.value === 'true';
 
   if (hasVotedCookie) {
-    return { error: 'Tu as déjà voté cette semaine!', songId };
+    return { error: 'You have already voted this week! / Tu as déjà voté cette semaine!', songId };
   }
 
   try {
@@ -212,26 +215,26 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
     cookieStore.set({
       name: voteCookieName,
       value: 'true',
-      maxAge: 60 * 60 * 24 * 7, // 1 semaine
+      maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
     });
     revalidatePath('/');
     return { success: true, songId };
   } catch (error) {
-    console.error('Erreur dans voteAction:', error);
+    console.error('Error in voteAction:', error);
     if (error instanceof Error) {
-        if (error.message.includes("déjà voté")) {
+        if (error.message.includes("already voted") || error.message.includes("déjà voté")) {
             // If the IP has already voted (detected by Firestore), set the cookie too.
             cookieStore.set({
                 name: voteCookieName,
                 value: 'true',
-                maxAge: 60 * 60 * 24 * 7, // 1 semaine
+                maxAge: 60 * 60 * 24 * 7, // 1 week
                 path: '/',
             });
             revalidatePath('/');
         }
         return { error: error.message, songId };
     }
-    return { error: 'une erreur inconnue est survenue', songId };
+    return { error: 'An unknown error occurred / Une erreur inconnue est survenue', songId };
   }
 }

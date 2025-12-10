@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { cn } from '@/lib/utils';
 import { Clock, Star, Trophy } from 'lucide-react';
+import { useLanguage } from '@/context/language-context';
 
 type Phase = 'NORMAL' | 'TOP_10' | 'TOP_3';
 
-function getCurrentPhase(): { phase: Phase; message: string; subMessage: string, icon: React.ReactNode } {
+function getCurrentPhase(t: (key: string) => string): { phase: Phase; message: string; subMessage: string, icon: React.ReactNode } {
     const now = new Date();
     const day = now.getDay(); // 0=Sunday, 1=Monday, ..., 5=Friday
     const hour = now.getHours();
@@ -16,8 +17,8 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     if (day === 5) {
         return { 
             phase: 'TOP_10',
-            message: 'Top 10',
-            subMessage: 'Seules les 10 premières chansons peuvent être votées !',
+            message: t('phase_top_10_title'),
+            subMessage: t('phase_top_10_desc'),
             icon: <Star className="h-8 w-8 text-yellow-400" />
         };
     }
@@ -25,8 +26,8 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     else if (day === 1 && hour >= 8) {
         return { 
             phase: 'TOP_3',
-            message: 'Sprint final',
-            subMessage: 'Seul le podium peut être voté !',
+            message: t('phase_top_3_title'),
+            subMessage: t('phase_top_3_desc'),
             icon: <Trophy className="h-8 w-8 text-amber-500" />
         };
     }
@@ -34,8 +35,8 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     else if (day === 2 && hour < 18) {
         return { 
             phase: 'TOP_3',
-            message: 'Sprint final',
-            subMessage: 'Le classement final est imminent !',
+            message: t('phase_top_3_title'),
+            subMessage: t('phase_top_3_final_desc'),
             icon: <Trophy className="h-8 w-8 text-amber-500" />
         };
     }
@@ -43,25 +44,26 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     // Default: Normal voting
     return { 
         phase: 'NORMAL',
-        message: 'Vote normal',
-        subMessage: 'Toutes les chansons sont ouvertes aux votes.',
+        message: t('phase_normal_title'),
+        subMessage: t('phase_normal_desc'),
         icon: <Clock className="h-8 w-8 text-muted-foreground" />
     };
 }
 
 
 export function VotingPhaseIndicator() {
-  const [phaseInfo, setPhaseInfo] = useState(getCurrentPhase());
+  const { t } = useLanguage();
+  const [phaseInfo, setPhaseInfo] = useState(getCurrentPhase(t));
 
   useEffect(() => {
     // This component will be rendered on the client, so we can safely
     // set the state. We don't need to update it on an interval as the phase
     // only changes over a long period. A user refresh will be sufficient.
-    setPhaseInfo(getCurrentPhase());
-  }, []);
+    setPhaseInfo(getCurrentPhase(t));
+  }, [t]);
 
   const phaseColors = {
-    NORMAL: 'border-border',
+    NORMAL: 'border-border/40',
     TOP_10: 'border-yellow-400/50 bg-yellow-400/5',
     TOP_3: 'border-amber-500/50 bg-amber-500/5'
   };

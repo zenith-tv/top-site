@@ -1,18 +1,18 @@
 'use server';
 /**
- * @fileOverview Un flux de modération de chansons utilisant l'IA.
+ * @fileOverview A song moderation flow using AI.
  *
- * - moderateSong - Une fonction qui gère le processus de modération des chansons.
- * - SongModerationInput - Le type d'entrée pour la fonction moderateSong.
- * - SongModerationOutput - Le type de retour pour la fonction moderateSong.
+ * - moderateSong - A function that handles the song moderation process.
+ * - SongModerationInput - The input type for the moderateSong function.
+ * - SongModerationOutput - The return type for the moderateSong function.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const SongModerationInputSchema = z.object({
-  title: z.string().describe('Le titre de la chanson.'),
-  artist: z.string().describe("L'artiste de la chanson."),
+  title: z.string().describe('The title of the song.'),
+  artist: z.string().describe('The artist of the song.'),
 });
 export type SongModerationInput = z.infer<typeof SongModerationInputSchema>;
 
@@ -20,9 +20,9 @@ const SongModerationOutputSchema = z.object({
   isTroll: z
     .boolean()
     .describe(
-      'La chanson est-elle considérée comme un troll, une blague ou non sérieuse.'
+      'Is the song considered a troll, joke, or non-serious entry.'
     ),
-  reason: z.string().describe('Une brève explication de la décision.'),
+  reason: z.string().describe('A brief explanation for the decision.'),
 });
 export type SongModerationOutput = z.infer<typeof SongModerationOutputSchema>;
 
@@ -36,20 +36,20 @@ const prompt = ai.definePrompt({
   name: 'songModerationPrompt',
   input: { schema: SongModerationInputSchema },
   output: { schema: SongModerationOutputSchema },
-  prompt: `Vous êtes un modérateur de classement musical nuancé. Votre tâche est de faire la distinction entre les véritables entrées musicales (même si elles sont humoristiques, satiriques ou des génériques d'émissions de télévision) et les soumissions "troll" évidentes conçues uniquement pour perturber le classement.
+  prompt: `You are a nuanced music chart moderator. Your task is to distinguish between genuine musical entries (even if they are humorous, satirical, or TV show themes) and obvious "troll" submissions designed solely to disrupt the chart.
 
-Tâches :
-1. Évaluez la soumission suivante :
-   - Artiste : {{{artist}}}
-   - Titre : {{{title}}}
+Tasks:
+1. Evaluate the following submission:
+   - Artist: {{{artist}}}
+   - Title: {{{title}}}
 
-2. Soyez tolérant envers les chansons qui pourraient être des blagues ou des références culturelles (par exemple, des chansons sur l'URSSAF, des génériques d'émissions de télévision, des mèmes connus qui sont de vraies chansons). Utilisez vos connaissances pour vérifier si la chanson ou l'artiste, même s'il semble étrange, a une existence réelle sur Internet.
+2. Be tolerant of songs that might be jokes or cultural references (e.g., songs about government agencies, TV show themes, well-known memes that are actual songs). Use your knowledge to check if the song or artist, even if it seems strange, has a real presence on the internet.
 
-3. Définissez 'isTroll' sur 'true' UNIQUEMENT pour les trolls évidents, le spam, les insultes, les chaînes de caractères absurdes ou les soumissions qui n'ont manifestement aucune intention musicale.
+3. Set 'isTroll' to 'true' ONLY for obvious trolls, spam, insults, nonsensical strings, or submissions that clearly have no musical intent.
 
-4. Pour tout le reste, en particulier en cas de doute, définissez 'isTroll' sur 'false'. Il vaut mieux laisser passer une chanson étrange que de bloquer une soumission légitime et créative.
+4. For everything else, especially when in doubt, set 'isTroll' to 'false'. It's better to let a strange song pass than to block a legitimate and creative submission.
 
-5. Fournissez une brève raison pour votre décision.`,
+5. Provide a brief reason for your decision in the original language of the submission.`,
 });
 
 const songModerationFlow = ai.defineFlow(
@@ -61,10 +61,10 @@ const songModerationFlow = ai.defineFlow(
   async (input) => {
     const { output } = await prompt(input);
     if (!output) {
-      // En cas d'échec de la génération, considérez la chanson comme non-troll pour ne pas bloquer les soumissions légitimes.
+      // In case of generation failure, consider the song as non-troll to avoid blocking legitimate submissions.
       return {
         isTroll: false,
-        reason: "L'analyse par l'IA a échoué.",
+        reason: "AI analysis failed / L'analyse par l'IA a échoué.",
       };
     }
     return output;

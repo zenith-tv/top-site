@@ -1,35 +1,24 @@
-import { getSongs } from '@/lib/data';
-import { SongChart } from '@/components/song-chart';
-import { SongSubmissionForm } from '@/components/song-submission-form';
-import { Logo } from '@/components/ui/logo';
-import { VotingPhaseIndicator } from '@/components/voting-phase-indicator';
+import { getSongs, getThisWeeksTuesdayKey } from '@/lib/data';
+import { PageClient } from './page-client';
+import { cookies, headers } from 'next/headers';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export default async function Home() {
+  noStore();
   const songs = await getSongs();
+  
+  const headersList = headers();
+  const cookieStore = cookies();
+  const weekKey = getThisWeeksTuesdayKey();
+  const voteCookieName = `vote_cast_${weekKey}`;
+  const hasVoted = cookieStore.get(voteCookieName)?.value === 'true';
+
+  const initialState = {
+    error: headersList.get('x-vote-error') || undefined,
+    songId: headersList.get('x-vote-songid') || undefined,
+  };
 
   return (
-    <div className="h-screen w-screen overflow-y-auto">
-      <header className="py-10">
-        <div className="container mx-auto text-center px-4">
-          <div className="flex items-center justify-center">
-            <Logo className="w-auto h-64 text-primary" />
-          </div>
-          <p className="mt-4 max-w-2xl mx-auto text-2xl text-muted-foreground">
-            Votez pour vos chansons préférées et faites-les monter dans le classement!
-          </p>
-        </div>
-      </header>
-      <main className="container mx-auto px-4 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            <div className="md:col-span-1 space-y-8">
-                <VotingPhaseIndicator />
-                <SongSubmissionForm />
-            </div>
-            <div className="md:col-span-2">
-                <SongChart songs={songs} />
-            </div>
-        </div>
-      </main>
-    </div>
+    <PageClient songs={songs} hasVoted={hasVoted} initialState={initialState} />
   );
 }

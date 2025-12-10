@@ -75,7 +75,7 @@ export async function getSongs(): Promise<Omit<Song, 'week'>[]> {
     } as Song));
     return songs;
   } catch (error) {
-    console.error("Erreur lors de la récupération des chansons: ", error);
+    console.error("Error fetching songs: ", error);
     return []; // Return empty array on error
   }
 }
@@ -88,20 +88,7 @@ export async function addSong(data: { title: string; artist: string }): Promise<
   const title = formatTitle(data.title);
   const artist = formatArtist(data.artist);
 
-  const newSongDataForRules = {
-      title: title,
-      artist: artist,
-      votes: 0,
-      week: weekKey,
-  };
-
-  const newSongDataForDb = {
-      ...newSongDataForRules,
-      title_lowercase: title.toLowerCase(),
-      artist_lowercase: artist.toLowerCase(),
-  };
-
-  // Check for duplicates in the current week (client-side check for immediate feedback)
+  // Check for duplicates in the current week
   const q = query(songsCollection, 
     where('week', '==', weekKey),
     where('title_lowercase', '==', title.toLowerCase()),
@@ -110,21 +97,30 @@ export async function addSong(data: { title: string; artist: string }): Promise<
 
   const querySnapshot = await getDocs(q);
   if (!querySnapshot.empty) {
-      throw new Error("cette chanson est déjà dans le classement");
+      throw new Error("This song is already in the chart / Cette chanson est déjà dans le classement");
   }
   
+  const newSongData = {
+    title: title,
+    artist: artist,
+    votes: 0,
+    week: weekKey,
+    title_lowercase: title.toLowerCase(),
+    artist_lowercase: artist.toLowerCase(),
+  };
+  
   try {
-    const docRef = await addDoc(songsCollection, newSongDataForDb);
+    const docRef = await addDoc(songsCollection, newSongData);
     return {
       id: docRef.id,
-      ...newSongDataForDb
+      ...newSongData
     };
   } catch (error) {
-      console.error("Erreur dans addSong:", error);
+      console.error("Error in addSong:", error);
       if (error instanceof FirebaseError) {
-          throw new Error(`Erreur Firebase: ${error.message}`);
+          throw new Error(`Firebase Error: ${error.message} / Erreur Firebase: ${error.message}`);
       }
-      throw new Error("Impossible d'ajouter la chanson. Erreur de base de données.");
+      throw new Error("Could not add song. Database error. / Impossible d'ajouter la chanson. Erreur de base de données.");
   }
 }
 
@@ -140,12 +136,12 @@ export async function addVote(songId: string, ip: string): Promise<void> {
         await runTransaction(db, async (transaction) => {
             const voteDoc = await transaction.get(voteRef);
             if (voteDoc.exists()) {
-                throw new Error("Tu as déjà voté cette semaine!");
+                throw new Error("You have already voted this week! / Tu as déjà voté cette semaine!");
             }
 
             const songDoc = await transaction.get(songRef);
             if (!songDoc.exists() || songDoc.data().week !== weekKey) {
-                throw new Error("chanson non trouvée");
+                throw new Error("Song not found / Chanson non trouvée");
             }
 
             transaction.set(voteRef, {
@@ -164,13 +160,13 @@ export async function addVote(songId: string, ip: string): Promise<void> {
         }
         if (error instanceof Error) {
             // Re-throw specific user-facing errors
-            if (error.message.includes("déjà voté") || error.message.includes("non trouvée")) {
+            if (error.message.includes("already voted") || error.message.includes("déjà voté") || error.message.includes("not found") || error.message.includes("non trouvée")) {
                 throw error;
             }
         }
         // Log the original error for debugging but throw a generic one to the user
-        console.error("Erreur de transaction de vote:", error);
-        throw new Error("erreur lors du traitement du vote");
+        console.error("Vote transaction error:", error);
+        throw new Error("Error processing vote / Erreur lors du traitement du vote");
     }
 }
 
@@ -194,7 +190,7 @@ export async function recordProfanityAttempt(ip: string): Promise<void> {
         });
     }
   } catch (error) {
-      console.error("Erreur lors de l'enregistrement de la tentative de grossièreté:", error);
+      console.error("Error recording profanity attempt:", error);
   }
 }
 
@@ -211,7 +207,7 @@ export async function getProfanityAttempts(ip: string): Promise<number> {
         }
         return 0;
     } catch (error) {
-        console.error("Erreur lors de la récupération des tentatives de grossièreté:", error);
+        console.error("Error getting profanity attempts:", error);
         return 0; // Failsafe
     }
 }
