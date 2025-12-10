@@ -61,7 +61,7 @@ export function VotingPhaseIndicator() {
   }, []);
 
   const phaseColors = {
-    NORMAL: 'border-border/50',
+    NORMAL: 'border-border',
     TOP_10: 'border-yellow-400/50 bg-yellow-400/5',
     TOP_3: 'border-amber-500/50 bg-amber-500/5'
   };
