@@ -36,12 +36,20 @@ const prompt = ai.definePrompt({
   name: 'songModerationPrompt',
   input: { schema: SongModerationInputSchema },
   output: { schema: SongModerationOutputSchema },
-  prompt: `Vous êtes un modérateur de classement musical strict. Votre tâche est de déterminer si une soumission de chanson est une chanson "troll", une blague, un mème ou une entrée musicale non sérieuse. Soyez très critique.
+  prompt: `Vous êtes un modérateur de classement musical nuancé. Votre tâche est de faire la distinction entre les véritables entrées musicales (même si elles sont humoristiques, satiriques ou des génériques d'émissions de télévision) et les soumissions "troll" évidentes conçues uniquement pour perturber le classement.
 
-Artiste : {{{artist}}}
-Titre : {{{title}}}
+Tâches :
+1. Évaluez la soumission suivante :
+   - Artiste : {{{artist}}}
+   - Titre : {{{title}}}
 
-Évaluez la soumission. Si elle est jugée comme une chanson troll, non sérieuse, une blague ou un mème, définissez isTroll sur true. Sinon, définissez-le sur false. Fournissez une brève raison pour votre décision.`,
+2. Soyez tolérant envers les chansons qui pourraient être des blagues ou des références culturelles (par exemple, des chansons sur l'URSSAF, des génériques d'émissions de télévision, des mèmes connus qui sont de vraies chansons). Utilisez vos connaissances pour vérifier si la chanson ou l'artiste, même s'il semble étrange, a une existence réelle sur Internet.
+
+3. Définissez 'isTroll' sur 'true' UNIQUEMENT pour les trolls évidents, le spam, les insultes, les chaînes de caractères absurdes ou les soumissions qui n'ont manifestement aucune intention musicale.
+
+4. Pour tout le reste, en particulier en cas de doute, définissez 'isTroll' sur 'false'. Il vaut mieux laisser passer une chanson étrange que de bloquer une soumission légitime et créative.
+
+5. Fournissez une brève raison pour votre décision.`,
 });
 
 const songModerationFlow = ai.defineFlow(
