@@ -37,8 +37,10 @@ export function SongSubmissionForm() {
 
   useEffect(() => {
     if (state.message) {
-      if (state.errors && Object.keys(state.errors).length > 0) {
-        // Validation errors are displayed inline
+      if (state.errors?.general) {
+        // Le message de bannissement est affiché directement dans le formulaire
+      } else if (state.errors && (state.errors.artist || state.errors.title)) {
+        // Les erreurs de validation sont affichées inline
       } else if (state.message.includes('succès')) {
         toast({
           title: 'Cool!',
@@ -46,7 +48,7 @@ export function SongSubmissionForm() {
         });
         formRef.current?.reset();
       } else {
-        // Other errors (like duplicate song)
+        // Autres erreurs (chanson dupliquée, termes inappropriés non-bannis, etc.)
         toast({
           title: 'Oups!',
           description: state.message,
@@ -78,6 +80,11 @@ export function SongSubmissionForm() {
             <Input id="title" name="title" placeholder="Ex: One More Time" required className="text-xl md:text-base"/>
             {state.errors?.title && <p className="text-sm font-medium text-destructive">{state.errors.title[0]}</p>}
           </div>
+          {state.errors?.general && (
+            <div className="p-4 bg-destructive/10 text-destructive border border-destructive rounded-md">
+              <p className="font-bold text-center">{state.errors.general[0]}</p>
+            </div>
+          )}
           <SubmitButton />
         </form>
       </CardContent>

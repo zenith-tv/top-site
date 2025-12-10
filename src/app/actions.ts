@@ -27,7 +27,7 @@ export type FormState = {
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
 
 const homoglyphMap: { [key: string]: string } = {
-    'ⅰ': 'i', 'Ⅰ': 'i', '1': 'i', 'l': 'l', // Can't map l to i, as it's a valid letter
+    'ⅰ': 'i', 'Ⅰ': 'i', '1': 'l', 'l': 'l', // Can't map l to i, as it's a valid letter
     'ο': 'o', 'Ο': 'o', 'о': 'o', 'О': 'o', '0': 'o',
     'а': 'a', 'А': 'a', '@': 'a',
     'е': 'e', 'Е': 'e', '3': 'e',
@@ -58,6 +58,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   if (profanityAttempts >= 3) {
     return {
       message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
+      errors: { general: ['Tu as été bloqué pour soumissions inappropriées répétées.'] },
     };
   }
   
@@ -85,6 +86,13 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   // Profanity check (Instant Ban words)
   if (containsForbiddenWords(title) || containsForbiddenWords(artist)) {
       await recordProfanityAttempt(ip);
+      const newProfanityAttempts = await getProfanityAttempts(ip);
+        if (newProfanityAttempts >= 3) {
+            return {
+                message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
+                errors: { general: ['Tu as été bloqué pour soumissions inappropriées répétées.'] },
+            };
+        }
       return {
           message: 'le nom de l\'artiste ou le titre contient des termes inappropriés.',
       };
@@ -94,7 +102,14 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   try {
     const moderationResult = await moderateSong({ title, artist });
     if (moderationResult.isTroll) {
-        await recordProfanityAttempt(ip); // Count it as a profanity attempt to trigger the ban
+        await recordProfanityAttempt(ip); 
+        const newProfanityAttempts = await getProfanityAttempts(ip);
+        if (newProfanityAttempts >= 3) {
+            return {
+                message: 'Tu as été bloqué pour soumissions inappropriées répétées.',
+                errors: { general: ['Tu as été bloqué pour soumissions inappropriées répétées.'] },
+            };
+        }
         return {
             message: `Soumission rejetée : ${moderationResult.reason}`
         };
@@ -143,13 +158,13 @@ export async function voteAction(prevState: VoteState | undefined, formData: For
   // Anti-VPN Check using ip-api.com
   try {
     const ipCheckResponse = await fetch(`http://ip-api.com/json/${ip}?fields=proxy`);
-    if (!ipCheckResponse.ok) {
-      console.error("Erreur de l'API ip-api.com:", ipCheckResponse.statusText);
-    } else {
+    if (ipCheckResponse.ok) {
       const ipData = await ipCheckResponse.json();
       if (ipData.proxy) {
         return { error: 'Les votes par VPN ou proxy ne sont pas autorisés.', songId };
       }
+    } else {
+      console.error("Erreur de l'API ip-api.com:", ipCheckResponse.statusText);
     }
   } catch (error) {
     console.error("Impossible de vérifier l'adresse IP:", error);
