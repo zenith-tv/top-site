@@ -212,6 +212,30 @@ export async function getProfanityAttempts(ip: string): Promise<number> {
     }
 }
 
+export async function banIp(ip: string): Promise<void> {
+    noStore();
+    const ipRef = doc(db, 'banned_ips', ip);
+    try {
+        await setDoc(ipRef, {
+            bannedAt: new Date(),
+        });
+    } catch (error) {
+        console.error("Error banning IP:", error);
+    }
+}
+
+export async function isIpBanned(ip: string): Promise<boolean> {
+    noStore();
+    const ipRef = doc(db, 'banned_ips', ip);
+    try {
+        const docSnap = await getDoc(ipRef);
+        return docSnap.exists();
+    } catch (error) {
+        console.error("Error checking if IP is banned:", error);
+        return false; // Failsafe to not block users due to DB errors
+    }
+}
+
 function getPreviousWeekKey(currentWeekKey: string): string {
     const date = new Date(currentWeekKey);
     date.setDate(date.getDate() - 7);

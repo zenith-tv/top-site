@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
-import { addSong, addVote, getThisWeeksTuesdayKey, recordProfanityAttempt, getProfanityAttempts } from '@/lib/data';
+import { addSong, addVote, getThisWeeksTuesdayKey, recordProfanityAttempt, getProfanityAttempts, isIpBanned, banIp } from '@/lib/data';
 import { cookies, headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
 import { moderateSong } from '@/ai/flows/song-moderation-flow';
@@ -25,6 +25,7 @@ export type FormState = {
 };
 
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
+const instantBanWords = ['labubu', '67', '41'];
 
 // Extended homoglyph map
 const homoglyphMap: { [key: string]: string } = {
@@ -56,7 +57,7 @@ const homoglyphMap: { [key: string]: string } = {
     'z': 'z', 'z': 'z', 'ᴢ': 'z', '𝘇': 'z', '𝚣': 'z', '𝐳': 'z', '𝑧': 'z', '𝒛': 'z', '𝓏': 'z', '𝓩': 'z', '𝕫': 'z', '𝖟': 'z', 'ⓩ': 'z', '🅩': 'z', '🅉': 'z', '🆉': 'z'
 };
 
-function containsForbiddenWords(text: string): boolean {
+function sanitizeText(text: string): string {
     // 1. Convert to lowercase
     const lowercasedText = text.toLowerCase();
     
@@ -69,16 +70,27 @@ function containsForbiddenWords(text: string): boolean {
         .join('');
 
     // 3. Remove all non-alphanumeric characters (including accents after normalization)
-    // and anything else that's not a-z.
-    const sanitizedText = normalizedText.replace(/[^a-z]/g, '');
+    // and anything else that's not a-z or a digit.
+    const sanitizedText = normalizedText.replace(/[^a-z0-9]/g, '');
 
-    // 4. Check if the sanitized text includes any forbidden word.
-    return forbiddenWords.some(word => sanitizedText.includes(word));
+    return sanitizedText;
+}
+
+function containsForbiddenWords(text: string, words: string[]): boolean {
+    const sanitizedText = sanitizeText(text);
+    return words.some(word => sanitizedText.includes(word));
 }
 
 export async function submitSongAction(prevState: FormState, formData: FormData): Promise<FormState> {
   const headersList = await headers();
   const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+  
+  if (await isIpBanned(ip)) {
+      return {
+          message: 'You have been permanently banned. / Tu as été banni définitivement.',
+          errors: { general: ['Cet espace ne vous est plus accessible.'] },
+      };
+  }
 
   const profanityAttempts = await getProfanityAttempts(ip);
   if (profanityAttempts >= 3) {
@@ -109,8 +121,17 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
     return { message: 'Song added successfully! / Chanson ajoutée avec succès!' };
   }
 
-  // Profanity check (Instant Ban words)
-  if (containsForbiddenWords(title) || containsForbiddenWords(artist)) {
+  // Instant BAN check
+  if (containsForbiddenWords(title, instantBanWords)) {
+      await banIp(ip);
+      return {
+          message: 'You have been permanently banned. / Tu as été banni définitivement.',
+          errors: { general: ['Cet espace ne vous est plus accessible.'] },
+      };
+  }
+
+  // Profanity check (temporary ban words)
+  if (containsForbiddenWords(title, forbiddenWords) || containsForbiddenWords(artist, forbiddenWords)) {
       await recordProfanityAttempt(ip);
       const newProfanityAttempts = await getProfanityAttempts(ip);
         if (newProfanityAttempts >= 3) {
