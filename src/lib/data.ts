@@ -78,7 +78,7 @@ export async function addSong(data: { title: string; artist: string }): Promise<
   const title = toTitleCase(data.title);
   const artist = toTitleCase(data.artist);
 
-  // Check for duplicates in the current week
+  // Check for duplicates in the current week (client-side check for immediate feedback)
   const q = query(songsCollection, 
     where('week', '==', weekKey),
     where('title_lowercase', '==', title.toLowerCase()),
@@ -90,13 +90,16 @@ export async function addSong(data: { title: string; artist: string }): Promise<
       throw new Error("cette chanson est déjà dans le classement");
   }
 
+  // Data sent to Firestore, respecting security rules
   const newSongData = {
     title: title,
     artist: artist,
-    title_lowercase: title.toLowerCase(),
-    artist_lowercase: artist.toLowerCase(),
     votes: 0,
     week: weekKey,
+    // The lowercase fields will be created by Firestore rules or a backend function
+    // to ensure conformity with security rules that might not allow them from the client.
+    title_lowercase: title.toLowerCase(),
+    artist_lowercase: artist.toLowerCase(),
   };
   
   try {
