@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { cn } from '@/lib/utils';
 import { Clock, Star, Trophy } from 'lucide-react';
 
@@ -16,9 +16,9 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     if (day === 5) {
         return { 
             phase: 'TOP_10',
-            message: 'Phase : Top 10',
+            message: 'Top 10',
             subMessage: 'Seules les 10 premières chansons peuvent être votées !',
-            icon: <Star className="h-6 w-6 text-yellow-400" />
+            icon: <Star className="h-8 w-8 text-yellow-400" />
         };
     }
     // Monday (day 1) from 8h onwards: Top 3 only
@@ -26,8 +26,8 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
         return { 
             phase: 'TOP_3',
             message: 'Sprint final',
-            subMessage: 'Seul le podium peut être voté ! Qui sera le numéro 1 ?',
-            icon: <Trophy className="h-6 w-6 text-amber-500" />
+            subMessage: 'Seul le podium peut être voté !',
+            icon: <Trophy className="h-8 w-8 text-amber-500" />
         };
     }
     // Tuesday (day 2) before 18h: Still in "Sprint Final" from Monday
@@ -35,8 +35,8 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
         return { 
             phase: 'TOP_3',
             message: 'Sprint final',
-            subMessage: 'Le classement final est imminent ! Derniers votes pour le podium.',
-            icon: <Trophy className="h-6 w-6 text-amber-500" />
+            subMessage: 'Le classement final est imminent !',
+            icon: <Trophy className="h-8 w-8 text-amber-500" />
         };
     }
     
@@ -44,8 +44,8 @@ function getCurrentPhase(): { phase: Phase; message: string; subMessage: string,
     return { 
         phase: 'NORMAL',
         message: 'Vote normal',
-        subMessage: 'Toutes les chansons sont ouvertes aux votes. Faites votre choix !',
-        icon: <Clock className="h-6 w-6 text-muted-foreground" />
+        subMessage: 'Toutes les chansons sont ouvertes aux votes.',
+        icon: <Clock className="h-8 w-8 text-muted-foreground" />
     };
 }
 
@@ -71,13 +71,15 @@ export function VotingPhaseIndicator() {
         "w-full sticky top-8 bg-card/50 backdrop-blur-sm transition-all",
         phaseColors[phaseInfo.phase]
         )}>
-      <CardHeader className="flex-row items-center gap-4 space-y-0 p-4">
-        {phaseInfo.icon}
-        <CardTitle className="text-2xl font-bold font-headline">{phaseInfo.message}</CardTitle>
+      <CardHeader>
+        <div className="flex items-start gap-4">
+            {phaseInfo.icon}
+            <div className='flex-1'>
+                <CardTitle className="text-4xl font-bold font-headline">{phaseInfo.message}</CardTitle>
+                <CardDescription className="text-2xl">{phaseInfo.subMessage}</CardDescription>
+            </div>
+        </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <p className="text-muted-foreground">{phaseInfo.subMessage}</p>
-      </CardContent>
     </Card>
   );
 }
