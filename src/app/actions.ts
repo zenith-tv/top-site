@@ -122,7 +122,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
   }
 
   // Instant BAN check
-  if (containsForbiddenWords(title, instantBanWords)) {
+  if (containsForbiddenWords(title, instantBanWords) || containsForbiddenWords(artist, instantBanWords)) {
       await banIp(ip);
       return {
           message: 'You have been permanently banned. / Tu as été banni définitivement.',
