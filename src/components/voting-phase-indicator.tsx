@@ -3,17 +3,26 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { cn } from '@/lib/utils';
-import { Clock, Star, Trophy } from 'lucide-react';
+import { Clock, Star, Trophy, Lock } from 'lucide-react';
 import { useLanguage } from '@/context/language-context';
 
-type Phase = 'NORMAL' | 'TOP_10' | 'TOP_3';
+type Phase = 'NORMAL' | 'CONSOLIDATION' | 'TOP_10' | 'TOP_3';
 
 function getCurrentPhase(t: (key: string) => string): { phase: Phase; message: string; subMessage: string, icon: React.ReactNode } {
     const now = new Date();
-    const day = now.getDay(); // 0=Sunday, 1=Monday, ..., 5=Friday
+    const day = now.getDay(); // 0=Sun, 1=Mon, 2=Tues, 3=Wed, 4=Thurs, 5=Fri, 6=Sat
     const hour = now.getHours();
 
-    // Friday (day 5): Top 10 only
+    // Thursday (day 4)
+    if (day === 4) {
+        return { 
+            phase: 'CONSOLIDATION',
+            message: t('phase_consolidation_title'),
+            subMessage: t('phase_consolidation_desc'),
+            icon: <Lock className="h-8 w-8 text-muted-foreground" />
+        };
+    }
+    // Friday (day 5)
     if (day === 5) {
         return { 
             phase: 'TOP_10',
@@ -22,7 +31,7 @@ function getCurrentPhase(t: (key: string) => string): { phase: Phase; message: s
             icon: <Star className="h-8 w-8 text-yellow-400" />
         };
     }
-    // Monday (day 1) from 8h onwards: Top 3 only
+    // Monday (day 1) from 8h onwards
     else if (day === 1 && hour >= 8) {
         return { 
             phase: 'TOP_3',
@@ -31,7 +40,7 @@ function getCurrentPhase(t: (key: string) => string): { phase: Phase; message: s
             icon: <Trophy className="h-8 w-8 text-amber-500" />
         };
     }
-    // Tuesday (day 2) before 18h: Still in "Sprint Final" from Monday
+    // Tuesday (day 2) before 18h
     else if (day === 2 && hour < 18) {
         return { 
             phase: 'TOP_3',
@@ -40,8 +49,7 @@ function getCurrentPhase(t: (key: string) => string): { phase: Phase; message: s
             icon: <Trophy className="h-8 w-8 text-amber-500" />
         };
     }
-    
-    // Default: Normal voting
+    // All other times (end of Tues, Wed, Sat, Sun, beginning of Mon)
     return { 
         phase: 'NORMAL',
         message: t('phase_normal_title'),
@@ -56,14 +64,12 @@ export function VotingPhaseIndicator() {
   const [phaseInfo, setPhaseInfo] = useState(getCurrentPhase(t));
 
   useEffect(() => {
-    // This component will be rendered on the client, so we can safely
-    // set the state. We don't need to update it on an interval as the phase
-    // only changes over a long period. A user refresh will be sufficient.
     setPhaseInfo(getCurrentPhase(t));
   }, [t]);
 
   const phaseColors = {
     NORMAL: 'border-border/40',
+    CONSOLIDATION: 'border-border/40',
     TOP_10: 'border-yellow-400/50 bg-yellow-400/5',
     TOP_3: 'border-amber-500/50 bg-amber-500/5'
   };
