@@ -82,7 +82,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
     return { message: 'chanson ajoutée avec succès!' };
   }
 
-  // Profanity check
+  // Profanity check (Instant Ban words)
   if (containsForbiddenWords(title) || containsForbiddenWords(artist)) {
       await recordProfanityAttempt(ip);
       return {
@@ -90,7 +90,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
       };
   }
 
-  // AI moderation check
+  // AI moderation check (for troll songs, etc.)
   try {
     const moderationResult = await moderateSong({ title, artist });
     if (moderationResult.isTroll) {
@@ -101,7 +101,7 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
     }
   } catch (error) {
     console.error("Erreur de modération IA:", error);
-    // En cas d'erreur de l'IA, on continue sans bloquer
+    // En cas d'erreur de l'IA, on continue sans bloquer pour ne pas pénaliser les utilisateurs légitimes.
   }
   
   try {
