@@ -61,7 +61,7 @@ export function VotingPhaseIndicator() {
   }, []);
 
   const phaseColors = {
-    NORMAL: 'border-border',
+    NORMAL: 'border-border/50',
     TOP_10: 'border-yellow-400/50 bg-yellow-400/5',
     TOP_3: 'border-amber-500/50 bg-amber-500/5'
   };
@@ -76,7 +76,7 @@ export function VotingPhaseIndicator() {
             {phaseInfo.icon}
             <div className='flex-1'>
                 <CardTitle className="font-bold">{phaseInfo.message}</CardTitle>
-                <CardDescription className="text-base">{phaseInfo.subMessage}</CardDescription>
+                <CardDescription className="text-lg leading-snug">{phaseInfo.subMessage}</CardDescription>
             </div>
         </div>
       </CardHeader>
