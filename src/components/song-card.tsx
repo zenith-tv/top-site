@@ -19,16 +19,19 @@ interface SongCardProps {
   hasVoted?: boolean;
 }
 
-function VoteButton({ disabled, hasVotedThisWeek }: { disabled: boolean, hasVotedThisWeek: boolean }) {
+function VoteButton({ disabled, hasVotedThisWeek, voteLockReason }: { disabled: boolean, hasVotedThisWeek: boolean, voteLockReason: string | null }) {
   const { pending } = useFormStatus();
-  const isDisabled = pending || disabled || hasVotedThisWeek;
+  const isLocked = voteLockReason !== null;
+  const isDisabled = pending || disabled || hasVotedThisWeek || isLocked;
   
   let buttonText = 'Voter';
   if (pending) {
     buttonText = 'Vote en cours';
+  } else if (isLocked) {
+    buttonText = voteLockReason;
   } else if (hasVotedThisWeek) {
     buttonText = 'Tu as voté';
-  } else if (disabled) { // this case might not be reachable if hasVotedThisWeek is true everywhere
+  } else if (disabled) {
     buttonText = 'Déjà voté';
   }
 
@@ -49,10 +52,37 @@ function VoteButton({ disabled, hasVotedThisWeek }: { disabled: boolean, hasVote
 
 export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: SongCardProps) {
   const isTop10 = rank <= 10;
+  const isTop3 = rank <= 3;
   const { toast } = useToast();
   const [state, formAction] = useActionState(voteAction, initialState);
   const [hasVotedForThisSong, setHasVotedForThisSong] = useState<boolean>(false);
   const [hasVotedThisWeek, setHasVotedThisWeek] = useState<boolean>(alreadyVoted ?? false);
+  const [voteLockReason, setVoteLockReason] = useState<string | null>(null);
+
+  useEffect(() => {
+    const now = new Date();
+    const day = now.getDay(); // 0=Dimanche, 1=Lundi, ..., 5=Vendredi
+    const hour = now.getHours();
+
+    // Vendredi (jour 5): On ne peut voter que pour le top 10
+    if (day === 5) {
+        if (!isTop10) {
+            setVoteLockReason("Top 10");
+        }
+    }
+    // Lundi (jour 1) à partir de 8h: On ne peut voter que pour le top 3
+    else if (day === 1 && hour >= 8) {
+        if (!isTop3) {
+            setVoteLockReason("Top 3");
+        }
+    }
+    // Mardi (jour 2) avant 18h: on est toujours dans la phase "Sprint final" du lundi
+    else if (day === 2 && hour < 18) {
+        if(!isTop3) {
+            setVoteLockReason("Top 3");
+        }
+    }
+  }, [isTop10, isTop3]);
 
 
   useEffect(() => {
@@ -84,7 +114,8 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
       className={cn(
         'p-3 sm:p-4 flex items-center gap-3 sm:gap-4 transition-all duration-300',
         'bg-card/50 backdrop-blur-sm',
-        isTop10 && 'bg-primary/5 border-primary/20'
+        isTop10 && 'bg-primary/5 border-primary/20',
+        (voteLockReason && !hasVotedThisWeek) && 'opacity-60'
       )}
     >
       <div
@@ -113,7 +144,7 @@ export function SongCard({ song, rank, initialState, hasVoted: alreadyVoted }: S
               <input type="text" id={`honeypot-vote-${song.id}`} name="honeypot" tabIndex={-1} autoComplete="off" />
             </div>
             <input type="hidden" name="songId" value={song.id} />
-            <VoteButton disabled={hasVotedForThisSong} hasVotedThisWeek={hasVotedThisWeek} />
+            <VoteButton disabled={hasVotedForThisSong} hasVotedThisWeek={hasVotedThisWeek} voteLockReason={voteLockReason} />
         </form>
       </div>
     </Card>
