@@ -59,7 +59,7 @@ export function SongSubmissionForm() {
   }, [state, toast]);
 
   return (
-    <Card className="w-full sticky top-8 bg-card/50 backdrop-blur-sm">
+    <Card className="w-full sticky top-24 bg-card/50 backdrop-blur-sm">
       <CardHeader>
         <CardTitle className="text-4xl font-bold font-headline">Propose un son</CardTitle>
         <CardDescription className="text-2xl">Ajoute ton titre préféré à la compétition</CardDescription>

@@ -2,6 +2,7 @@ import { getSongs } from '@/lib/data';
 import { SongChart } from '@/components/song-chart';
 import { SongSubmissionForm } from '@/components/song-submission-form';
 import { Logo } from '@/components/ui/logo';
+import { VotingPhaseIndicator } from '@/components/voting-phase-indicator';
 
 export default async function Home() {
   const songs = await getSongs();
@@ -20,7 +21,8 @@ export default async function Home() {
       </header>
       <main className="container mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-            <div className="md:col-span-1">
+            <div className="md:col-span-1 space-y-8">
+                <VotingPhaseIndicator />
                 <SongSubmissionForm />
             </div>
             <div className="md:col-span-2">
