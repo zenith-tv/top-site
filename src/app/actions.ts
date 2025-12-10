@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { addSong, addVote, getThisWeeksTuesdayKey, recordProfanityAttempt, getProfanityAttempts } from '@/lib/data';
 import { cookies, headers } from 'next/headers';
 import { FirebaseError } from 'firebase/app';
+import { moderateSong } from '@/ai/flows/song-moderation-flow';
 
 
 const songSchema = z.object({
@@ -26,10 +27,10 @@ export type FormState = {
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
 
 const homoglyphMap: { [key: string]: string } = {
-    'ⅰ': 'i', 'Ⅰ': 'i',
-    'ο': 'o', 'Ο': 'o', 'о': 'o', 'О': 'o',
-    'а': 'a', 'А': 'a',
-    'е': 'e', 'Е': 'e',
+    'ⅰ': 'i', 'Ⅰ': 'i', '1': 'i', 'l': 'l', // Can't map l to i, as it's a valid letter
+    'ο': 'o', 'Ο': 'o', 'о': 'o', 'О': 'o', '0': 'o',
+    'а': 'a', 'А': 'a', '@': 'a',
+    'е': 'e', 'Е': 'e', '3': 'e',
     // Ajoutez d'autres homoglyphes si nécessaire
 };
 
@@ -87,6 +88,20 @@ export async function submitSongAction(prevState: FormState, formData: FormData)
       return {
           message: 'le nom de l\'artiste ou le titre contient des termes inappropriés.',
       };
+  }
+
+  // AI moderation check
+  try {
+    const moderationResult = await moderateSong({ title, artist });
+    if (moderationResult.isTroll) {
+        await recordProfanityAttempt(ip); // Count it as a profanity attempt to trigger the ban
+        return {
+            message: `Soumission rejetée : ${moderationResult.reason}`
+        };
+    }
+  } catch (error) {
+    console.error("Erreur de modération IA:", error);
+    // En cas d'erreur de l'IA, on continue sans bloquer
   }
   
   try {
