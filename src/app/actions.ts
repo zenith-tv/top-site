@@ -25,7 +25,7 @@ export type FormState = {
 };
 
 const forbiddenWords = ['caca', 'pipi', 'zizi', 'merde', 'con', 'putain', 'bite', 'chatte', 'djfrites', 'renelataupe'];
-const instantBanWords = ['labubu', '67', '41'];
+const instantBanWords = ['labubu', '67', '41', 'iabubu', 'bbno', 'bbnos', 'skibidi'];
 
 // Extended homoglyph map
 const homoglyphMap: { [key: string]: string } = {
